@@ -10,6 +10,17 @@ const USERS_FILE = 'users.json';
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 
+
+// Start HTTP server so Render doesn't kill your deploy
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("Bot is running\n");
+}).listen(PORT, () => {
+  console.log("HTTP server running on port", PORT);
+});
+
 const readJSON = (file) => {
   try {
     if (!fs.existsSync(file)) return [];
@@ -75,3 +86,4 @@ bot.onText(/\/check/, async (msg) => {
 
   await bot.sendMessage(ADMIN_ID, `✅ Tug'ilgan kun xabarlari yuborildi.`);
 });
+
