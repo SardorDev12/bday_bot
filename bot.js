@@ -48,7 +48,8 @@ bot.onText(/\/start/, async (msg) => {
   if (!user) {
     await User.create({ chatId, name, date: '' });
     bot.sendMessage(chatId, '👋 Siz ro‘yxatga qo‘shildingiz!');
-    bot.sendMessage(ADMIN_ID, `${name} ro'yxatdan o'tdi.`);
+    const m = `<a href="tg://user?id=${chatId}">${name}</a> ro‘yxatga qo‘shildingiz.`;
+    bot.sendMessage(ADMIN_ID, m, { parse_mode: 'HTML' });
   } else {
     bot.sendMessage(chatId, 'Siz allaqachon ro‘yxatdasiz.');
   }
@@ -85,4 +86,5 @@ bot.onText(/\/check/, async (msg) => {
 // --------------------
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => res.end('Bot is running\n')).listen(PORT);
+
 
