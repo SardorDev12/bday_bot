@@ -1,74 +1,87 @@
 [
   {
     "chatId": 8131483061,
-    "name": "Sardor Ish"
+    "name": "Sardor Ish",
+    "date": "00.00"
   },
   {
     "chatId": 2036484764,
-    "name": "Умиджон"
+    "name": "Умиджон",
+    "date": "00.00"
   },
   {
     "chatId": 558034587,
-    "name": "Ozodbek Ismoilov"
+    "name": "Ozodbek Ismoilov",
+    "date": "00.00"
   },
   {
     "chatId": 7941155317,
-    "name": "Ozodbek Ismoilov"
+    "name": "Ozodbek Ismoilov",
+    "date": "00.00"
   },
   {
     "chatId": 1973433816,
-    "name": "Sarvinoz"
-  },
-  {
-    "chatId": 5593725171,
-    "name": "ꜱᴀʀᴅᴏʀ ꜰᴀʀʜᴏᴅ ᴏ'ɢ'ʟɪ"
-  },
-  {
-    "chatId": 1853519734,
-    "name": "Moʻydinjon$Ominaxon$Sadiyaxon"
+    "name": "Sarvinoz",
+    "date": "00.00"
   },
   {
     "chatId": 1227666875,
-    "name": "𝑀𝑎𝑙𝑖𝑘𝑎"
+    "name": "𝑀𝑎𝑙𝑖𝑘𝑎",
+    "date": "00.00"
   },
   {
     "chatId": 506711648,
-    "name": "Umidabonu"
+    "name": "Umidabonu",
+    "date": "00.00"
   },
   {
     "chatId": 133572586,
-    "name": "Ghost"
+    "name": "Ghost",
+    "date": "00.00"
   },
   {
     "chatId": 1263354356,
-    "name": "Shoxbozbek"
+    "name": "Shoxbozbek",
+    "date": "00.00"
   },
   {
     "chatId": 1786004046,
-    "name": "Азиз"
+    "name": "Азиз",
+    "date": "00.00"
   },
   {
     "chatId": 520434931,
-    "name": "Sabrina"
+    "name": "Sabrina",
+    "date": "00.00"
   },
   {
     "chatId": 1951629531,
-    "name": "Zhansaya"
+    "name": "Zhansaya",
+    "date": "00.00"
   },
   {
     "chatId": 133374485,
-    "name": "A"
+    "name": "A",
+    "date": "00.00"
   },
   {
     "chatId": 1981277337,
-    "name": "Shox"
+    "name": "Shox",
+    "date": "00.00"
   },
   {
     "chatId": 319449316,
-    "name": "Islombek"
+    "name": "Islombek",
+    "date": "00.00"
   },
   {
     "chatId": 79871553,
-    "name": "Sultonmurod"
+    "name": "Sultonmurod",
+    "date": "00.00"
+  },
+  {
+    "chatId": 5593725171,
+    "name": "ꜱᴀʀᴅᴏʀ ꜰᴀʀʜᴏᴅ ᴏ'ɢ'ʟɪ",
+    "date": "00.00"
   }
 ]
