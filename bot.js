@@ -9,19 +9,34 @@ const ADMIN_ID = process.env.ADMIN_ID;
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const MONGO_URL = process.env.MONGO_URL;
 
-mongoose
-  .connect(MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to DB'))
-  .catch((err) => console.error('DB error', err));
+// --------------------
+// CONNECT MONGOOSE
+// --------------------
+async function connectDB() {
+  try {
+    await mongoose.connect(MONGO_URL);
+    console.log('✅ Connected to MongoDB via Mongoose');
+  } catch (err) {
+    console.error('❌ Mongoose connection error:', err);
+    process.exit(1);
+  }
+}
+connectDB();
 
+// --------------------
+// USER MODEL
+// --------------------
 const userSchema = new mongoose.Schema({
   chatId: { type: Number, required: true, unique: true },
   name: String,
   date: String,
 });
 
-const User = new mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
 
+// --------------------
+// BOT
+// --------------------
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 bot.onText(/\/start/, async (msg) => {
@@ -31,23 +46,16 @@ bot.onText(/\/start/, async (msg) => {
   let user = await User.findOne({ chatId });
 
   if (!user) {
-    user = new User({ chatId, name, date: '' });
-    await user.save();
-    bot.sendMessage(msg.chat.id, '👋 Siz ro‘yxatga qo‘shildingiz!');
-    bot.sendMessage(ADMIN_ID, `${msg.chat.first_name} ro'yxatdan o'tdi.`);
+    await User.create({ chatId, name, date: '' });
+    bot.sendMessage(chatId, '👋 Siz ro‘yxatga qo‘shildingiz!');
+    bot.sendMessage(ADMIN_ID, `${name} ro'yxatdan o'tdi.`);
   } else {
-    bot.sendMessage(msg.chat.id, 'Siz allaqachon ro‘yxatdasiz ✅');
+    bot.sendMessage(chatId, 'Siz allaqachon ro‘yxatdasiz.');
   }
 });
 
 bot.onText(/\/check/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) {
-    bot.sendMessage(
-      msg.chat.id,
-      "Ro'yxatdan o'tish uchun /start buyrug'ini yuboring."
-    );
-    return;
-  }
+  if (String(msg.from.id) !== ADMIN_ID) return;
 
   const users = await User.find({ date: { $ne: '' } });
 
@@ -57,27 +65,23 @@ bot.onText(/\/check/, async (msg) => {
   const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
   const tomorrowStr = `${dd}.${mm}`;
 
-  const birthdayPeople = users.filter((p) => p?.date === tomorrowStr);
+  const birthdayPeople = users.filter((u) => u.date === tomorrowStr);
+
   if (birthdayPeople.length === 0) {
-    bot.sendMessage(ADMIN_ID, "🎈 Ertaga hech kimning tug'ilgan kuni emas.");
+    bot.sendMessage(ADMIN_ID, "🎈 Ertaga tug'ilgan kun yo‘q.");
     return;
   }
 
-  for (const b_owner of birthdayPeople) {
-    const message = `🎂 Ertaga (${dd}.${mm}) <a href="tg://user?id=${b_owner.chatId}">${b_owner.name}</a>ning tug'ilgan kuni!`;
-    try {
-      await bot.sendMessage(GROUP_CHAT_ID, message, { parse_mode: 'HTML' });
-    } catch (err) {
-      console.error('Send error:', err.message);
-    }
+  for (const p of birthdayPeople) {
+    const m = `🎂 Ertaga (${dd}.${mm}) <a href="tg://user?id=${p.chatId}">${p.name}</a>ning tug'ilgan kuni!`;
+    await bot.sendMessage(GROUP_CHAT_ID, m, { parse_mode: 'HTML' });
   }
-  await bot.sendMessage(ADMIN_ID, `✅ Tug'ilgan kun xabarlari yuborildi.`);
+
+  bot.sendMessage(ADMIN_ID, "✅ Tug'ilgan kun xabarlari yuborildi.");
 });
 
+// --------------------
+// KEEP-ALIVE SERVER
+// --------------------
 const PORT = process.env.PORT || 3000;
-http
-  .createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Bot is running\n');
-  })
-  .listen(PORT, () => console.log('🌐 Server on', PORT));
+http.createServer((req, res) => res.end('Bot is running\n')).listen(PORT);
