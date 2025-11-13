@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import http from "http";
 dotenv.config();
 
 const TOKEN = process.env.TOKEN;
@@ -86,4 +87,5 @@ bot.onText(/\/check/, async (msg) => {
 
   await bot.sendMessage(ADMIN_ID, `✅ Tug'ilgan kun xabarlari yuborildi.`);
 });
+
 
