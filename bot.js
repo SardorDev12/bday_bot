@@ -74,7 +74,7 @@ bot.onText(/\/check/, async (msg) => {
   }
 
   for (const p of birthdayPeople) {
-    const m = `🎂 Hurmatli (${dd}.${mm}) <a href="tg://user?id=${p.chatId}">${p.name}</a>. Sizni ertangi tug'ilgan kuningiz bilan chin qalbimizdan tabriklaymiz! Hamisha kulib yuring. Hurmat bilan, hamkasblaringiz.`;
+    const m = `🎂 Hurmatli <a href="tg://user?id=${p.chatId}">${p.name}</a>. Sizni ertangi tug'ilgan kuningiz bilan chin qalbimizdan tabriklaymiz! Omad hamisha yor bo'lsin. Hurmat bilan, hamkasblaringiz.`;
     await bot.sendMessage(GROUP_CHAT_ID, m, { parse_mode: 'HTML' });
   }
 
@@ -86,6 +86,7 @@ bot.onText(/\/check/, async (msg) => {
 // --------------------
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => res.end('Bot is running\n')).listen(PORT);
+
 
 
 
