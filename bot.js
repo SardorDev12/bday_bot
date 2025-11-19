@@ -8,6 +8,7 @@ const TOKEN = process.env.TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID;
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const MONGO_URL = process.env.MONGO_URL;
+const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
 
 // --------------------
 // CONNECT MONGOOSE
@@ -98,7 +99,8 @@ bot.onText(/\/check/, async (msg) => {
 });
 
 bot.onText(/\/test/, async (msg) => {
-  bot.sendMessage(GROUP_CHAT_ID, 'Hurmatli hamkasblar! Tug\'ilgan kunlar haqida eslatib turuvchi botimiz ishga tushdi. Kim ro\'yxatdan o\'tmagan bo\'lsa, @ppd_notifier_bot ga o\'tib, start buyrug\'ini bosishingizni so\'raymiz.');
+  if (String(msg.from.id) !== ADMIN_ID) return;
+  bot.sendMessage(TEST_GROUP_URL, 'Hurmatli hamkasblar! Tug\'ilgan kunlar haqida eslatib turuvchi botimiz ishga tushdi. Kim ro\'yxatdan o\'tmagan bo\'lsa, @ppd_notifier_bot ga o\'tib, start buyrug\'ini bosishingizni so\'raymiz.');
   bot.sendMessage(ADMIN_ID, 'Guruhga test xabar yuborildi.');
 }
 
@@ -116,5 +118,6 @@ http.createServer(async (req, res) => {
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
 
