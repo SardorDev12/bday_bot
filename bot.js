@@ -103,11 +103,12 @@ bot.onText(/\/check/, async (msg) => {
 // --------------------
 const PORT = process.env.PORT || 3000;
 http.createServer(async (req, res) => {
-  if (req.url === "/" || req.url === "") {
+  if (req.url === "/check") {
     await runBirthdayCheck();
-    res.end("Birthday check executed\n");
+    res.end("Cron executed\n");
     return;
   }
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
