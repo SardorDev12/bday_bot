@@ -97,6 +97,11 @@ bot.onText(/\/check/, async (msg) => {
   await runBirthdayCheck();
 });
 
+bot.onText(/\/test/, async (msg) => {
+  bot.sendMessage(GROUP_CHAT_ID, 'Hurmatli hamkasblar! Tug\'ilgan kunlar haqida eslatib turuvchi botimiz ishga tushdi. Kim ro\'yxatdan o\'tmagan bo\'lsa, @ppd_notifier_bot ga o\'tib, start buyrug\'ini bosishingizni so\'raymiz.');
+  bot.sendMessage(ADMIN_ID, 'Guruhga test xabar yuborildi.');
+}
+
 // --------------------
 // HTTP SERVER
 // BASE URL TRIGGERS CHECK
@@ -111,4 +116,5 @@ http.createServer(async (req, res) => {
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
