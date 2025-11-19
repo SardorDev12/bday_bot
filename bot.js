@@ -39,6 +39,43 @@ const User = mongoose.model('User', userSchema);
 // --------------------
 const bot = new TelegramBot(TOKEN, { polling: true });
 
+// --------------------
+// SHARED BIRTHDAY CHECK FUNCTION
+// --------------------
+async function runBirthdayCheck() {
+  const users = await User.find({ date: { $ne: '' } });
+
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, '0');
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const todayStr = `${dd}.${mm}`;
+
+  const birthdayPeople = users.filter(u => u.date === todayStr);
+
+  if (birthdayPeople.length === 0) {
+    await bot.sendMessage(ADMIN_ID, "🎈 Bugun tug'ilgan kun yo‘q.");
+    return false;
+  }
+
+  for (const p of birthdayPeople) {
+    const m = `🎂 Hurmatli <a href="tg://user?id=${p.chatId}">${p.name}</a>!
+🎉 Sizni bugungi tavallud ayyomingiz bilan chin qalbimizdan tabriklaymiz! 🎉  
+
+Sizga mustahkam sog‘liq, bitmas-tuganmas omad, ezgu orzu-intilishlaringizning ro‘yobga chiqishini tilaymiz.  
+Hayotingizda doimo quvonch, shodlik va yangi yutuqlar hamroh bo‘lsin.
+
+🤝 Hurmat bilan — qadrdon hamkasblaringiz.
+`;
+    await bot.sendMessage(GROUP_CHAT_ID, m, { parse_mode: "HTML" });
+  }
+
+  await bot.sendMessage(ADMIN_ID, "✅ Tug'ilgan kun xabarlari yuborildi.");
+  return true;
+}
+
+// --------------------
+// BOT COMMANDS
+// --------------------
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
   const name = msg.from.first_name || 'Unknown';
@@ -57,36 +94,20 @@ bot.onText(/\/start/, async (msg) => {
 
 bot.onText(/\/check/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
-
-  const users = await User.find({ date: { $ne: '' } });
-
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const dd = String(tomorrow.getDate()).padStart(2, '0');
-  const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-  const tomorrowStr = `${dd}.${mm}`;
-
-  const birthdayPeople = users.filter((u) => u.date === tomorrowStr);
-
-  if (birthdayPeople.length === 0) {
-    bot.sendMessage(ADMIN_ID, "🎈 Ertaga tug'ilgan kun yo‘q.");
-    return;
-  }
-
-  for (const p of birthdayPeople) {
-    const m = `🎂 Hurmatli <a href="tg://user?id=${p.chatId}">${p.name}</a>. Sizni ertangi tug'ilgan kuningiz bilan chin qalbimizdan tabriklaymiz! Omad hamisha yor bo'lsin. Hurmat bilan, hamkasblaringiz.`;
-    await bot.sendMessage(GROUP_CHAT_ID, m, { parse_mode: 'HTML' });
-  }
-
-  bot.sendMessage(ADMIN_ID, "✅ Tug'ilgan kun xabarlari yuborildi.");
+  await runBirthdayCheck();
 });
 
 // --------------------
-// KEEP-ALIVE SERVER
+// HTTP SERVER
+// BASE URL TRIGGERS CHECK
 // --------------------
 const PORT = process.env.PORT || 3000;
-http.createServer((req, res) => res.end('Bot is running\n')).listen(PORT);
+http.createServer(async (req, res) => {
+  if (req.url === "/" || req.url === "") {
+    await runBirthdayCheck();
+    res.end("Birthday check executed\n");
+    return;
+  }
 
-
-
-
+  res.end("Bot is running\n");
+}).listen(PORT);
