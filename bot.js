@@ -100,7 +100,7 @@ bot.onText(/\/check/, async (msg) => {
 
 bot.onText(/\/test/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
-  bot.sendMessage(TEST_GROUP_URL, 'Hurmatli hamkasblar! Tug\'ilgan kunlar haqida eslatib turuvchi botimiz ishga tushdi. Kim ro\'yxatdan o\'tmagan bo\'lsa, @ppd_notifier_bot ga o\'tib, start buyrug\'ini bosishingizni so\'raymiz.');
+  bot.sendMessage(GROUP_CHAT_ID, 'Hurmatli hamkasblar! Tug\'ilgan kunlar haqida eslatib turuvchi botimiz ishga tushdi. Kim ro\'yxatdan o\'tmagan bo\'lsa, @ppd_notifier_bot ga o\'tib, start buyrug\'ini bosishingizni so\'raymiz.');
   bot.sendMessage(ADMIN_ID, 'Guruhga test xabar yuborildi.');
 })
 
@@ -118,6 +118,7 @@ http.createServer(async (req, res) => {
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
 
 
