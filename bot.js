@@ -28,9 +28,9 @@ connectDB();
 // USER MODEL
 // --------------------
 const userSchema = new mongoose.Schema({
-  chatId: { type: Number, required: true, unique: true },
-  name: String,
-  date: String,
+  chatId: { type: Number, required: true},
+  name: {type: String, required: true},
+  date: {type: String, required: true},
 });
 
 const User = mongoose.model('User', userSchema);
@@ -118,6 +118,7 @@ http.createServer(async (req, res) => {
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
 
 
