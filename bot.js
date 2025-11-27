@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema({
   name: {type: String, required: true},
   date: {type: String, required: true},
   type: String,
+  position: String,
 });
 
 const User = mongoose.model('User', userSchema);
@@ -60,7 +61,7 @@ async function runBirthdayCheck() {
   }
 
   for (const p of birthdayPeople) {
-    const m = `🎂 Hurmatli <a href="tg://user?id=${p.chatId}">${p.name}</a>!
+    const m_dept = `🎂 Hurmatli <a href="tg://user?id=${p.chatId}">${p.name}</a>!
 🎉 Sizni bugungi tavallud ayyomingiz bilan chin qalbimizdan tabriklaymiz! 🎉  
 
 Sizga mustahkam sog‘liq, bitmas-tuganmas omad, ezgu orzu-intilishlaringizning ro‘yobga chiqishini tilaymiz.  
@@ -68,7 +69,13 @@ Hayotingizda doimo quvonch, shodlik va yangi yutuqlar hamroh bo‘lsin.
 
 🤝 Hurmat bilan — qadrdon hamkasblaringiz.
 `;
-    await bot.sendMessage(GROUP_CHAT_ID, m, { parse_mode: "HTML" });
+    const m_management = `Bugun Markaziy bankning ${p?.position}i ${p?.name}</a>ning tug'ilgan kuni!
+🎉 Jamoa nomidan chin qalbimizdan tabriklaymiz! 🎉`;
+    if(p?.type === "management"){
+    await bot.sendMessage(GROUP_CHAT_ID, m_management, { parse_mode: "HTML" });
+    }else{
+    await bot.sendMessage(GROUP_CHAT_ID, m_dept, { parse_mode: "HTML" });
+    }
   }
 
   await bot.sendMessage(ADMIN_ID, "✅ Tug'ilgan kun xabarlari yuborildi.");
@@ -101,7 +108,7 @@ bot.onText(/\/check/, async (msg) => {
 
 bot.onText(/\/test/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
-  bot.sendMessage(GROUP_CHAT_ID, 'Hurmatli hamkasblar! Tug\'ilgan kunlar haqida eslatib turuvchi botimiz ishga tushdi. Kim ro\'yxatdan o\'tmagan bo\'lsa, @ppd_notifier_bot ga o\'tib, start buyrug\'ini bosishingizni so\'raymiz.');
+  bot.sendMessage(TEST_GROUP_URL, 'Hurmatli hamkasblar! Tug\'ilgan kunlar haqida eslatib turuvchi botimiz ishga tushdi. Kim ro\'yxatdan o\'tmagan bo\'lsa, @ppd_notifier_bot ga o\'tib, start buyrug\'ini bosishingizni so\'raymiz.');
   bot.sendMessage(ADMIN_ID, 'Guruhga test xabar yuborildi.');
 })
 
@@ -119,6 +126,7 @@ http.createServer(async (req, res) => {
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
 
 
