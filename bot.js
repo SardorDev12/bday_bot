@@ -69,11 +69,16 @@ Hayotingizda doimo quvonch, shodlik va yangi yutuqlar hamroh bo‘lsin.
 
 🤝 Hurmat bilan — qadrdon hamkasblaringiz.
 `;
-    const m_management = `Bugun Markaziy bankning ${p?.position}i ${p?.name}</a>ning tug'ilgan kuni!
+    const m_management = `Bugun Markaziy bankning raisining ${p?.position}i ${p?.name}</a>ning tug'ilgan kuni!
+🎉 Jamoa nomidan chin qalbimizdan tabriklaymiz! 🎉`;
+    const m_dir = `Bugun ${p?.position} ${p?.name}</a>ning tug'ilgan kuni!
 🎉 Jamoa nomidan chin qalbimizdan tabriklaymiz! 🎉`;
     if(p?.type === "management"){
     await bot.sendMessage(GROUP_CHAT_ID, m_management, { parse_mode: "HTML" });
-    }else{
+    }else if(p?.type === "director"){
+    await bot.sendMessage(GROUP_CHAT_ID, m_dir, { parse_mode: "HTML" });
+    }
+    else{
     await bot.sendMessage(GROUP_CHAT_ID, m_dept, { parse_mode: "HTML" });
     }
   }
@@ -126,6 +131,7 @@ http.createServer(async (req, res) => {
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
 
 
