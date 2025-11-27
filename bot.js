@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema({
   chatId: Number,
   name: {type: String, required: true},
   date: {type: String, required: true},
+  type: String,
 });
 
 const User = mongoose.model('User', userSchema);
@@ -118,6 +119,7 @@ http.createServer(async (req, res) => {
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
 
 
