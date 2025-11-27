@@ -45,7 +45,7 @@ const bot = new TelegramBot(TOKEN, { polling: true });
 // --------------------
 // SHARED BIRTHDAY CHECK FUNCTION
 // --------------------
-async function runBirthdayCheck() {
+async function runBirthdayCheck(chat_id) {
   const users = await User.find({ date: { $ne: '' } });
 
   const today = new Date();
@@ -75,12 +75,12 @@ const m_management = `Bugun Markaziy bankning raisining ${p?.position}i ${p.name
     const m_dir = `Bugun ${p?.position} ${p?.name}ning tug'ilgan kuni!
 🎉 Jamoa nomidan chin qalbimizdan tabriklaymiz! 🎉`;
     if(p?.type === "management"){
-    await bot.sendMessage(GROUP_CHAT_ID, m_management, { parse_mode: "HTML" });
+    await bot.sendMessage(chat_id, m_management, { parse_mode: "HTML" });
     }else if(p?.type === "director"){
-    await bot.sendMessage(GROUP_CHAT_ID, m_dir, { parse_mode: "HTML" });
+    await bot.sendMessage(chat_id, m_dir, { parse_mode: "HTML" });
     }
     else{
-    await bot.sendMessage(GROUP_CHAT_ID, m_dept, { parse_mode: "HTML" });
+    await bot.sendMessage(chat_id, m_dept, { parse_mode: "HTML" });
     }
   }
 
@@ -109,12 +109,12 @@ bot.onText(/\/start/, async (msg) => {
 
 bot.onText(/\/check/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
-  await runBirthdayCheck();
+  await runBirthdayCheck(GROUP_CHAT_ID);
 });
 
 bot.onText(/\/test/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
-  await runBirthdayCheck();
+  await runBirthdayCheck(TEST_GROUP_URL);
 })
 
 // --------------------
@@ -124,13 +124,14 @@ bot.onText(/\/test/, async (msg) => {
 const PORT = process.env.PORT || 3000;
 http.createServer(async (req, res) => {
   if (req.url === "/check") {
-    await runBirthdayCheck();
+    await runBirthdayCheck(GROUP_CHAT_ID);
     res.end("Cron executed\n");
     return;
   }
 
   res.end("Bot is running\n");
 }).listen(PORT);
+
 
 
 
