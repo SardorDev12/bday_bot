@@ -1,6 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import mongoose from 'mongoose';
 import http from 'http';
+import dayjs from 'dayjs';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -25,22 +26,164 @@ async function connectDB() {
 connectDB();
 
 // --------------------
-// USER MODEL
+// MODELS
 // --------------------
 const userSchema = new mongoose.Schema({
   chatId: Number,
-  name: {type: String, required: true},
-  date: {type: String, required: true},
+  name: { type: String, required: true },
+  date: { type: String, required: true },
   type: String,
   position: String,
 });
 
+const eventSchema = new mongoose.Schema({
+  title: String,
+  guests: [String],
+  date: String,
+  time: String,
+  location: String,
+});
+
 const User = mongoose.model('User', userSchema);
+const Event = mongoose.model('Event', eventSchema);
 
 // --------------------
 // BOT
 // --------------------
 const bot = new TelegramBot(TOKEN, { polling: true });
+
+// Event Management
+const userState = {};
+
+bot.onText(/\/add_event/, (msg) => {
+  const chatId = msg.chat.id;
+  userState[chatId] = { step: 1, data: {} };
+
+  bot.sendMessage(chatId, 'Uchrashuv *mavzusini* kiriting:', {
+    parse_mode: 'Markdown',
+  });
+});
+
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+  const text = msg.text;
+
+  if (!userState[chatId]) return;
+  if (text.startsWith('/')) return;
+
+  const state = userState[chatId];
+
+  if (state.step === 1) {
+    state.data.title = text;
+    state.step = 2;
+    return bot.sendMessage(
+      chatId,
+      '*Ishtirokchilarni* vergul bilan kiriting:',
+      {
+        parse_mode: 'Markdown',
+      }
+    );
+  }
+
+  if (state.step === 2) {
+    state.data.guests = text.split(',').map((g) => g.trim());
+    state.step = 3;
+    return bot.sendMessage(
+      chatId,
+      'Uchrashuv *sanasini* kiriting (KK.OO.YYYY):',
+      {
+        parse_mode: 'Markdown',
+      }
+    );
+  }
+
+  if (state.step === 3) {
+    state.data.date = text;
+    state.step = 4;
+    return bot.sendMessage(chatId, 'Uchrashuv *vaqtini* kiriting (SS:MM):', {
+      parse_mode: 'Markdown',
+    });
+  }
+
+  if (state.step === 4) {
+    state.data.time = text;
+    state.step = 5;
+    return bot.sendMessage(
+      chatId,
+      'Uchrashuv *xonasi yoki formati(ONLINE, OFFLINE)* kiriting:',
+      {
+        parse_mode: 'Markdown',
+      }
+    );
+  }
+
+  if (state.step === 5) {
+    state.data.location = text;
+
+    try {
+      await Event.create(state.data);
+    } catch (err) {
+      console.error('❌ Error saving event:', err);
+      return bot.sendMessage(chatId, 'Xatolik: ucashuv saqlanmadi.');
+    }
+
+    delete userState[chatId];
+
+    return bot.sendMessage(chatId, '✅ Uchrashuv saqlandi.');
+  }
+});
+
+async function checkEvents(chat_id, halfDay = false) {
+  const today = dayjs().format('DD.MM.YYYY');
+
+  let now = new Date();
+  // let formattedTime = now.toLocaleTimeString('en-US', {
+  //   hour: '2-digit',
+  //   minute: '2-digit',
+  //   hour12: true,
+  // });
+
+  let currentHours = now.getHours(); // 0–23
+  let currentMinutes = now.getMinutes();
+
+  let currentTotalMinutes = currentHours * 60 + currentMinutes;
+
+  let events;
+
+  if (!halfDay) {
+    events = await Event.find({ date: today });
+  } else {
+    const allEvents = await Event.find({ date: today });
+
+    if (currentHours < 12) {
+      events = allEvents.filter((ev) => {
+        const [h] = ev.time.split(':').map(Number);
+        return h < 12;
+      });
+    } else {
+      events = allEvents.filter((ev) => {
+        const [h] = ev.time.split(':').map(Number);
+        return h >= 12;
+      });
+    }
+  }
+
+  if (!events.length) {
+    await bot.sendMessage(ADMIN_ID, 'Bugun uchrashuv rejalashtirilmagan.');
+    return false;
+  }
+
+  for (const ev of events) {
+    const message = `📅 *Bugun uchrashuv bor!*
+    *Mavzu:* ${ev.title}
+    *Mehmonlar:* ${ev.guests.join(', ')}
+    *Vaqt:* ${ev.time}
+    *Joy:* ${ev.location}`;
+    await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
+  }
+
+  await bot.sendMessage(ADMIN_ID, 'Uchrashuv xabarlari yuborildi.');
+}
 
 // --------------------
 // SHARED BIRTHDAY CHECK FUNCTION
@@ -53,7 +196,7 @@ async function runBirthdayCheck(chat_id) {
   const mm = String(today.getMonth() + 1).padStart(2, '0');
   const todayStr = `${dd}.${mm}`;
 
-  const birthdayPeople = users.filter(u => u.date === todayStr);
+  const birthdayPeople = users.filter((u) => u.date === todayStr);
 
   if (birthdayPeople.length === 0) {
     await bot.sendMessage(ADMIN_ID, "🎈 Bugun tug'ilgan kun yo‘q.");
@@ -69,19 +212,18 @@ Hayotingizda doimo quvonch, shodlik va yangi yutuqlar hamroh bo‘lsin.
 
 🤝 Hurmat bilan — qadrdon hamkasblaringiz.
 `;
-const m_management = `Bugun Markaziy bank raisining ${p?.position}i ${p.name}ning tug'ilgan kuni!
+    const m_management = `Bugun Markaziy bank raisining ${p?.position}i ${p.name}ning tug'ilgan kuni!
 🎉 Jamoa nomidan chin qalbimizdan tabriklaymiz! 🎉`;
 
     const m_dir = `Bugun ${p?.position} ${p?.name}ning tug'ilgan kuni!
 🎉 Jamoa nomidan chin qalbimizdan tabriklaymiz! 🎉`;
-    
-    if(p?.type === "management"){
-    await bot.sendMessage(chat_id, m_management);
-    }else if(p?.type === "director"){
-    await bot.sendMessage(chat_id, m_dir);
-    }
-    else{
-    await bot.sendMessage(chat_id, m_dept, { parse_mode: "HTML" });
+
+    if (p?.type === 'management') {
+      await bot.sendMessage(chat_id, m_management);
+    } else if (p?.type === 'director') {
+      await bot.sendMessage(chat_id, m_dir);
+    } else {
+      await bot.sendMessage(chat_id, m_dept, { parse_mode: 'HTML' });
     }
   }
 
@@ -116,33 +258,43 @@ bot.onText(/\/check/, async (msg) => {
 bot.onText(/\/test/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await runBirthdayCheck(TEST_GROUP_URL);
-})
+});
+
+bot.onText(/\/test_events/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID) return;
+  await checkEvents(TEST_GROUP_URL);
+});
+
+bot.onText(/\/test_events_half/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID) return;
+  await checkEvents(TEST_GROUP_URL, true);
+});
 
 // --------------------
 // HTTP SERVER
 // BASE URL TRIGGERS CHECK
 // --------------------
 const PORT = process.env.PORT || 3000;
-http.createServer(async (req, res) => {
-  if (req.url === "/check") {
-    await runBirthdayCheck(GROUP_CHAT_ID);
-    res.end("Cron executed\n");
-    return;
-  }
+http
+  .createServer(async (req, res) => {
+    if (req.url === '/check') {
+      await runBirthdayCheck(GROUP_CHAT_ID);
+      res.end('Cron executed\n');
+      return;
+    }
 
-  res.end("Bot is running\n");
-}).listen(PORT);
+    if (req.url === '/events') {
+      await checkEvents(GROUP_CHAT_ID);
+      res.end('Full-day events executed');
+      return;
+    }
 
+    if (req.url === '/events/half') {
+      await checkEvents(GROUP_CHAT_ID, true);
+      res.end('Half-day events executed');
+      return;
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
+    res.end('Bot is running\n');
+  })
+  .listen(PORT);
