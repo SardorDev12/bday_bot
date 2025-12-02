@@ -203,7 +203,7 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
   }
 
   // If no events found
-  if (!events.length) {
+  if (!events?.length) {
     await bot.sendMessage(current_id, '📭 Bugun uchrashuv rejalashtirilmagan.');
     return false;
   }
@@ -346,6 +346,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
