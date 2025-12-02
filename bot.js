@@ -182,7 +182,12 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
 
   } else {
     // HALF DAY FILTERING
-    const allEvents = await Event.find({ date: today });
+    const allEvents = await Event.find({
+    $or: [
+      { date: today },        
+      { recurring: true }
+    ]
+  });
 
     if (currentHours < 14) {
       // MORNING EVENTS (AM)
@@ -217,10 +222,13 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
   *Boshlanish vaqti:* ${ev.time}
   *Joy:* ${ev.location}`;
 
-    if(ev.type.toLowerCase() === "data"){
+  if (ev.type?.toLowerCase() === "data") {
+    // Only send to Data group
     await bot.sendMessage(DATA_GROUP_ID, message, { parse_mode: 'Markdown' });
-    }
+  } else {
+    // Send other events to main group
     await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
+  }
   }
 
   await bot.sendMessage(ADMIN_ID, '📨 Uchrashuv xabarlari yuborildi.');
@@ -346,6 +354,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
