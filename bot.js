@@ -131,7 +131,7 @@ bot.on('message', async (msg) => {
     if (state.step === 5) {
     state.data.type = text;
     state.step = 6;
-    return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (ha = 1, yo'q = 0):', {
+    return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (ha = 1, yo\'q = 0):', {
       parse_mode: 'Markdown',
     });
   }
@@ -337,6 +337,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
