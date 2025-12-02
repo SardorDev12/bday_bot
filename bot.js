@@ -42,6 +42,8 @@ const eventSchema = new mongoose.Schema({
   guests: [String],
   date: String,
   time: String,
+  type: String,
+  recurring: Boolean,
   location: String,
 });
 
@@ -118,9 +120,25 @@ bot.on('message', async (msg) => {
     });
   }
 
-  if (state.step === 4) {
+    if (state.step === 4) {
     state.data.time = text;
     state.step = 5;
+    return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, Data,.):', {
+      parse_mode: 'Markdown',
+    });
+  }
+
+    if (state.step === 5) {
+    state.data.type = text;
+    state.step = 6;
+    return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (ha = 1, yo'q = 0):', {
+      parse_mode: 'Markdown',
+    });
+  }
+
+  if (state.step === 6) {
+    state.data.recurring = (text === "0" ? false : true) ?? false;
+    state.step = 7;
     return bot.sendMessage(
       chatId,
       'Uchrashuv *xonasi yoki formati(ONLINE, OFFLINE)* kiriting:',
@@ -130,7 +148,7 @@ bot.on('message', async (msg) => {
     );
   }
 
-  if (state.step === 5) {
+  if (state.step === 7) {
     state.data.location = text;
 
     try {
@@ -190,7 +208,7 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
   `📅 *Bugun uchrashuv bor!*
   *Mavzu:* ${ev.title}
   *Ishtirokchilar:* ${ev.guests.join(', ')}
-  *Vaqt:* ${ev.time}
+  *Boshlanish vaqti:* ${ev.time}
   *Joy:* ${ev.location}`;
 
     await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
@@ -319,5 +337,6 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
