@@ -173,7 +173,12 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
 
   if (!halfDay) {
     // FULL DAY EVENTS
-    events = await Event.find({ date: today });
+  const events = await Event.find({
+    $or: [
+      { date: today },        
+      { recurring: true }
+    ]
+  });
 
   } else {
     // HALF DAY FILTERING
@@ -341,6 +346,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
