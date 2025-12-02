@@ -10,6 +10,7 @@ const ADMIN_ID = process.env.ADMIN_ID;
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const MONGO_URL = process.env.MONGO_URL;
 const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
+const EVENT_MANAGER_ID = process.env.EVENT_MANAGER_ID;
 
 // --------------------
 // CONNECT MONGOOSE
@@ -57,6 +58,8 @@ const userState = {};
 
 bot.onText(/\/add_event/, (msg) => {
   const chatId = msg.chat.id;
+
+if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) return;
   userState[chatId] = { step: 1, data: {} };
 
   bot.sendMessage(chatId, 'Uchrashuv *mavzusini* kiriting:', {
@@ -68,6 +71,16 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
+  // Permission check only during event creation
+  if (userState[chatId]) {
+    if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) {
+      bot.sendMessage(chatId, "⛔ Sizga ushbu funksiya uchun ruxsat yo‘q.");
+      delete userState[chatId];  // Reset flow
+      return;
+    }
+  }
+
+  // Not inside event creation → ignore
   if (!userState[chatId]) return;
   if (text.startsWith('/')) return;
 
@@ -131,7 +144,7 @@ bot.on('message', async (msg) => {
   }
 });
 
-async function checkEvents(chat_id, halfDay = false) {
+async function checkEvents(chat_id,current_id, halfDay = false) {
   const today = dayjs().format('DD.MM.YYYY');
 
   let now = new Date();
@@ -167,18 +180,18 @@ async function checkEvents(chat_id, halfDay = false) {
 
   // If no events found
   if (!events.length) {
-    await bot.sendMessage(ADMIN_ID, '📭 Bugun uchrashuv rejalashtirilmagan.');
+    await bot.sendMessage(current_id, '📭 Bugun uchrashuv rejalashtirilmagan.');
     return false;
   }
 
   // Send event messages
   for (const ev of events) {
-    const message =
-`📅 *Bugun uchrashuv bor!*
-*Mavzu:* ${ev.title}
-*Ishtirokchilar:* ${ev.guests.join(', ')}
-*Vaqt:* ${ev.time}
-*Joy:* ${ev.location}`;
+  const message = 
+  `📅 *Bugun uchrashuv bor!*
+  *Mavzu:* ${ev.title}
+  *Ishtirokchilar:* ${ev.guests.join(', ')}
+  *Vaqt:* ${ev.time}
+  *Joy:* ${ev.location}`;
 
     await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
   }
@@ -264,18 +277,18 @@ bot.onText(/\/test/, async (msg) => {
 });
 
 bot.onText(/\/testEvents/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) return;
-  await checkEvents(TEST_GROUP_URL);
+  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  await checkEvents(TEST_GROUP_URL, msg.from.id);
 });
 
 bot.onText(/\/events/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) return;
-  await checkEvents(GROUP_CHAT_ID);
+  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  await checkEvents(GROUP_CHAT_ID, msg.from.id);
 });
 
 bot.onText(/\/halfday/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) return;
-  await checkEvents(GROUP_CHAT_ID, true);
+  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  await checkEvents(GROUP_CHAT_ID, msg.from.id, true);
 });
 
 // --------------------
@@ -292,13 +305,13 @@ http
     }
 
     if (req.url === '/events') {
-      await checkEvents(GROUP_CHAT_ID);
+      await checkEvents(GROUP_CHAT_ID, ADMIN_ID);
       res.end('Full-day events executed');
       return;
     }
 
     if (req.url === '/events/half') {
-      await checkEvents(GROUP_CHAT_ID, true);
+      await checkEvents(GROUP_CHAT_ID,ADMIN_ID, true);
       res.end('Half-day events executed');
       return;
     }
@@ -306,8 +319,3 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
-
-
-
-
-
