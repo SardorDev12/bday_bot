@@ -257,7 +257,7 @@ bot.onText(/\/start/, async (msg) => {
   let user = await User.findOne({ chatId });
 
   if (!user) {
-    await User.create({ chatId, name, date: '' });
+    await User.create({ chatId, name, date: '00.00' });
     bot.sendMessage(chatId, '👋 Siz ro‘yxatga qo‘shildingiz!');
     const m = `<a href="tg://user?id=${chatId}">${name}</a> ro‘yxatga qo‘shildi.`;
     bot.sendMessage(ADMIN_ID, m, { parse_mode: 'HTML' });
@@ -319,4 +319,5 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
