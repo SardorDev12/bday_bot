@@ -126,9 +126,7 @@ bot.on('message', async (msg) => {
       console.error('❌ Error saving event:', err);
       return bot.sendMessage(chatId, 'Xatolik: ucashuv saqlanmadi.');
     }
-
     delete userState[chatId];
-
     return bot.sendMessage(chatId, '✅ Uchrashuv saqlandi.');
   }
 });
@@ -169,7 +167,7 @@ async function checkEvents(chat_id, halfDay = false) {
 
   // If no events found
   if (!events.length) {
-    await bot.sendMessage(chat_id, '📭 Bugun uchrashuv rejalashtirilmagan.');
+    await bot.sendMessage(ADMIN_ID, '📭 Bugun uchrashuv rejalashtirilmagan.');
     return false;
   }
 
@@ -178,14 +176,14 @@ async function checkEvents(chat_id, halfDay = false) {
     const message =
 `📅 *Bugun uchrashuv bor!*
 *Mavzu:* ${ev.title}
-*Mehmonlar:* ${ev.guests.join(', ')}
+*Ishtirokchilar:* ${ev.guests.join(', ')}
 *Vaqt:* ${ev.time}
 *Joy:* ${ev.location}`;
 
     await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
   }
 
-  await bot.sendMessage(chat_id, '📨 Uchrashuv xabarlari yuborildi.');
+  await bot.sendMessage(ADMIN_ID, '📨 Uchrashuv xabarlari yuborildi.');
   return true;
 }
 
@@ -265,12 +263,12 @@ bot.onText(/\/test/, async (msg) => {
   await runBirthdayCheck(TEST_GROUP_URL);
 });
 
-bot.onText(/\/test_events/, async (msg) => {
+bot.onText(/\/events/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await checkEvents(TEST_GROUP_URL);
 });
 
-bot.onText(/\/test_events_half/, async (msg) => {
+bot.onText(/\/halfday/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await checkEvents(TEST_GROUP_URL, true);
 });
@@ -303,6 +301,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
