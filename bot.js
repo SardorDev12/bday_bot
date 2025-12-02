@@ -137,53 +137,58 @@ async function checkEvents(chat_id, halfDay = false) {
   const today = dayjs().format('DD.MM.YYYY');
 
   let now = new Date();
-  // let formattedTime = now.toLocaleTimeString('en-US', {
-  //   hour: '2-digit',
-  //   minute: '2-digit',
-  //   hour12: true,
-  // });
-
   let currentHours = now.getHours(); // 0–23
-  let currentMinutes = now.getMinutes();
-
-  let currentTotalMinutes = currentHours * 60 + currentMinutes;
 
   let events;
 
   if (!halfDay) {
+    // FULL DAY EVENTS
     events = await Event.find({ date: today });
+
   } else {
+    // HALF DAY FILTERING
     const allEvents = await Event.find({ date: today });
 
-    if (formattedTime.slice(-2) == "AM") {
-      events = allEvents.filter((ev) => {
-        const [h] = ev.time.split(':').map(Number);
+    if (currentHours < 12) {
+      // MORNING EVENTS (AM)
+      events = allEvents.filter(ev => {
+        if (!ev.time) return false;
+        const [h] = ev.time.split(":").map(Number);
         return h < 12;
       });
+
     } else {
-      events = allEvents.filter((ev) => {
-        const [h] = ev.time.split(':').map(Number);
-        return h > 12;
+      // AFTERNOON EVENTS (PM)
+      events = allEvents.filter(ev => {
+        if (!ev.time) return false;
+        const [h] = ev.time.split(":").map(Number);
+        return h >= 12;
       });
     }
   }
 
+  // If no events found
   if (!events.length) {
-    await bot.sendMessage(ADMIN_ID, 'Bugun uchrashuv rejalashtirilmagan.');
+    await bot.sendMessage(chat_id, '📭 Bugun uchrashuv rejalashtirilmagan.');
     return false;
   }
 
+  // Send event messages
   for (const ev of events) {
-    const message = `📅 *Bugun uchrashuv bor!*
-    *Mavzu:* ${ev.title}
-    *Mehmonlar:* ${ev.guests.join(', ')}
-    *Vaqt:* ${ev.time}
-    *Joy:* ${ev.location}`;
+    const message =
+`📅 *Bugun uchrashuv bor!*
+*Mavzu:* ${ev.title}
+*Mehmonlar:* ${ev.guests.join(', ')}
+*Vaqt:* ${ev.time}
+*Joy:* ${ev.location}`;
+
     await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
   }
 
-  await bot.sendMessage(ADMIN_ID, 'Uchrashuv xabarlari yuborildi.');
+  await bot.sendMessage(chat_id, '📨 Uchrashuv xabarlari yuborildi.');
+  return true;
 }
+
 
 // --------------------
 // SHARED BIRTHDAY CHECK FUNCTION
@@ -298,4 +303,5 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
