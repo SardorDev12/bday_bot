@@ -149,12 +149,12 @@ async function checkEvents(chat_id, halfDay = false) {
     // HALF DAY FILTERING
     const allEvents = await Event.find({ date: today });
 
-    if (currentHours < 12) {
+    if (currentHours < 14) {
       // MORNING EVENTS (AM)
       events = allEvents.filter(ev => {
         if (!ev.time) return false;
         const [h] = ev.time.split(":").map(Number);
-        return h < 12;
+        return h < 14;
       });
 
     } else {
@@ -162,7 +162,7 @@ async function checkEvents(chat_id, halfDay = false) {
       events = allEvents.filter(ev => {
         if (!ev.time) return false;
         const [h] = ev.time.split(":").map(Number);
-        return h >= 12;
+        return h >= 14;
       });
     }
   }
@@ -303,5 +303,6 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
