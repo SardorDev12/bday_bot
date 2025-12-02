@@ -263,14 +263,19 @@ bot.onText(/\/test/, async (msg) => {
   await runBirthdayCheck(TEST_GROUP_URL);
 });
 
-bot.onText(/\/events/, async (msg) => {
+bot.onText(/\/testEvents/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await checkEvents(TEST_GROUP_URL);
 });
 
+bot.onText(/\/events/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID) return;
+  await checkEvents(GROUP_CHAT_ID);
+});
+
 bot.onText(/\/halfday/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
-  await checkEvents(TEST_GROUP_URL, true);
+  await checkEvents(GROUP_CHAT_ID, true);
 });
 
 // --------------------
@@ -301,6 +306,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
