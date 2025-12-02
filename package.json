@@ -12,9 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dayjs": "^1.11.19",
     "dotenv": "^17.2.3",
     "mongodb": "^7.0.0",
-    "mongoose": "^8.19.3",
+    "mongoose": "^8.20.1",
     "node-cron": "^4.2.1",
     "node-telegram-bot-api": "^0.66.0"
   }
