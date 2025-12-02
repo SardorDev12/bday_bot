@@ -276,7 +276,7 @@ bot.onText(/\/test/, async (msg) => {
   await runBirthdayCheck(TEST_GROUP_URL);
 });
 
-bot.onText(/\/testEvents/, async (msg) => {
+bot.onText(/\/t_Events/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
   await checkEvents(TEST_GROUP_URL, msg.from.id);
 });
@@ -319,3 +319,4 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
