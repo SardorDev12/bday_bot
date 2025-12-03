@@ -45,6 +45,7 @@ const eventSchema = new mongoose.Schema({
   time: String,
   type: String,
   recurring: Boolean,
+  endDate: String,
   location: String,
 });
 
@@ -59,7 +60,7 @@ const bot = new TelegramBot(TOKEN, { polling: true });
 // Event Management
 const userState = {};
 
-bot.onText(/\/add_event/, (msg) => {
+bot.onText(/^\/add_event$/, (msg) => {
   const chatId = msg.chat.id;
 
 if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) return;
@@ -74,92 +75,75 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
-  // Permission check only during event creation
-  if (userState[chatId]) {
-    if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) {
-      bot.sendMessage(chatId, "⛔ Sizga ushbu funksiya uchun ruxsat yo‘q.");
-      delete userState[chatId];  // Reset flow
-      return;
-    }
-  }
-
-  // Not inside event creation → ignore
   if (!userState[chatId]) return;
   if (text.startsWith('/')) return;
 
   const state = userState[chatId];
 
+  // Step 1: Title
   if (state.step === 1) {
     state.data.title = text;
     state.step = 2;
-    return bot.sendMessage(
-      chatId,
-      '*Ishtirokchilarni* vergul bilan kiriting:',
-      {
-        parse_mode: 'Markdown',
-      }
-    );
+    return bot.sendMessage(chatId, '*Ishtirokchilarni* vergul bilan kiriting:', { parse_mode: 'Markdown' });
   }
 
+  // Step 2: Guests
   if (state.step === 2) {
-    state.data.guests = text.split(',').map((g) => g.trim());
+    state.data.guests = text.split(',').map(g => g.trim());
     state.step = 3;
-    return bot.sendMessage(
-      chatId,
-      'Uchrashuv *sanasini* kiriting (KK.OO.YYYY):',
-      {
-        parse_mode: 'Markdown',
-      }
-    );
+    return bot.sendMessage(chatId, 'Uchrashuv *sanasini* kiriting (KK.OO.YYYY):', { parse_mode: 'Markdown' });
   }
 
+  // Step 3: Date
   if (state.step === 3) {
     state.data.date = text;
     state.step = 4;
-    return bot.sendMessage(chatId, 'Uchrashuv *vaqtini* kiriting (SS:MM):', {
-      parse_mode: 'Markdown',
-    });
+    return bot.sendMessage(chatId, 'Uchrashuv *vaqtini* kiriting (SS:MM):', { parse_mode: 'Markdown' });
   }
 
-    if (state.step === 4) {
+  // Step 4: Time
+  if (state.step === 4) {
     state.data.time = text;
     state.step = 5;
-    return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, Data,.):', {
-      parse_mode: 'Markdown',
-    });
+    return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (1 = ha, 0 = yo‘q):', { parse_mode: 'Markdown' });
   }
 
-    if (state.step === 5) {
-    state.data.type = text;
+  // Step 5: Recurring?
+  if (state.step === 5) {
+    state.data.recurring = text.trim() === "1";
     state.step = 6;
-    return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (ha = 1, yo\'q = 0):', {
-      parse_mode: 'Markdown',
-    });
+
+    if (state.data.recurring) {
+      return bot.sendMessage(chatId, 'Uchrashuv *yakuniy sanasini* kiriting (KK.OO.YYYY):', { parse_mode: 'Markdown' });
+    } else {
+      return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, DATA, TRANSFORMATION):', { parse_mode: 'Markdown' });
+    }
   }
 
+  // Step 6: End date OR type
   if (state.step === 6) {
-    state.data.recurring = (text === "0" ? false : true) ?? false;
+    if (state.data.recurring) {
+      state.data.endDate = text;
+    } else {
+      state.data.type = text;
+    }
     state.step = 7;
-    return bot.sendMessage(
-      chatId,
-      'Uchrashuv *xonasi yoki formati(ONLINE, OFFLINE)* kiriting:',
-      {
-        parse_mode: 'Markdown',
-      }
-    );
+    return bot.sendMessage(chatId, 'Uchrashuv *manzilini* kiriting:', { parse_mode: 'Markdown' });
   }
 
+  // Step 7: Location + SAVE
   if (state.step === 7) {
     state.data.location = text;
 
     try {
       await Event.create(state.data);
     } catch (err) {
-      console.error('❌ Error saving event:', err);
-      return bot.sendMessage(chatId, 'Xatolik: ucashuv saqlanmadi.');
+      console.error("❌ Error saving event:", err);
+      return bot.sendMessage(chatId, "Xatolik: uchrashuv saqlanmadi.");
     }
+
     delete userState[chatId];
-    return bot.sendMessage(chatId, '✅ Uchrashuv saqlandi.');
+    return bot.sendMessage(chatId, "✅ Uchrashuv saqlandi.");
   }
 });
 
@@ -167,21 +151,17 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
   const today = dayjs().format('DD.MM.YYYY');
 
   let now = new Date();
-  let currentHours = now.getHours(); // 0–23
-
+  let currentHours = now.getHours();
   let events;
 
   if (!halfDay) {
-    // FULL DAY EVENTS
   events = await Event.find({
     $or: [
       { date: today },        
       { recurring: true }
     ]
   });
-
   } else {
-    // HALF DAY FILTERING
     const allEvents = await Event.find({
     $or: [
       { date: today },        
@@ -190,15 +170,12 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
   });
 
     if (currentHours < 14) {
-      // MORNING EVENTS (AM)
       events = allEvents.filter(ev => {
         if (!ev.time) return false;
         const [h] = ev.time.split(":").map(Number);
         return h < 14;
       });
-
     } else {
-      // AFTERNOON EVENTS (PM)
       events = allEvents.filter(ev => {
         if (!ev.time) return false;
         const [h] = ev.time.split(":").map(Number);
@@ -223,10 +200,8 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
   *Joy:* ${ev.location}`;
 
   if (ev.type?.toLowerCase() === "data") {
-    // Only send to Data group
     await bot.sendMessage(DATA_GROUP_ID, message, { parse_mode: 'Markdown' });
   } else {
-    // Send other events to main group
     await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
   }
   }
@@ -285,7 +260,7 @@ Hayotingizda doimo quvonch, shodlik va yangi yutuqlar hamroh bo‘lsin.
 // --------------------
 // BOT COMMANDS
 // --------------------
-bot.onText(/\/start/, async (msg) => {
+bot.onText(/^\/start$/, async (msg) => {
   const chatId = msg.chat.id;
   const name = msg.from.first_name || 'Unknown';
 
@@ -301,27 +276,27 @@ bot.onText(/\/start/, async (msg) => {
   }
 });
 
-bot.onText(/\/check/, async (msg) => {
+bot.onText(/^\/check_birthdays$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await runBirthdayCheck(GROUP_CHAT_ID);
 });
 
-bot.onText(/\/test/, async (msg) => {
+bot.onText(/^\/test_birthdays$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await runBirthdayCheck(TEST_GROUP_URL);
 });
 
-bot.onText(/\/t_Events/, async (msg) => {
+bot.onText(/^\/test_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
   await checkEvents(TEST_GROUP_URL, msg.from.id);
 });
 
-bot.onText(/\/events/, async (msg) => {
+bot.onText(/^\/check_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
   await checkEvents(GROUP_CHAT_ID, msg.from.id);
 });
 
-bot.onText(/\/halfday/, async (msg) => {
+bot.onText(/^\/check_halfday_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
   await checkEvents(GROUP_CHAT_ID, msg.from.id, true);
 });
@@ -354,6 +329,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
