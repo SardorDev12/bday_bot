@@ -161,7 +161,7 @@ async function checkEvents(chat_id, current_chat, halfDay = false) {
   events = await Event.find({
     $or: [
       { date: today },        
-      { recurring: true }
+      { recurring: true, endDate: {$gte: today}  }
     ]
   });
   } else {
@@ -199,6 +199,7 @@ async function checkEvents(chat_id, current_chat, halfDay = false) {
   `📅 *Bugun uchrashuv bor!*
   *Mavzu:* ${ev.title}
   *Ishtirokchilar:* ${ev.guests.join(', ')}
+  *Uchrashuv sanasi:* ${ev.date}
   *Boshlanish vaqti:* ${ev.time}
   *Joy:* ${ev.location}`;
 
@@ -328,6 +329,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
