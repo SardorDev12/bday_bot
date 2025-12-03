@@ -159,7 +159,7 @@ async function checkEvents(chat_id, current_chat, halfDay = false) {
 
   if (!halfDay) {
   events = await Event.find({
-    $or: [
+    $and: [
       { date: today },        
       { recurring: true, endDate: {$gte: today}  }
     ]
@@ -329,6 +329,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
