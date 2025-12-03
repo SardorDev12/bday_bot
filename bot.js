@@ -147,7 +147,7 @@ bot.on('message', async (msg) => {
   }
 });
 
-async function checkEvents(chat_id,current_id, halfDay = false) {
+async function checkEvents(chat_id, halfDay = false) {
   const today = dayjs().format('DD.MM.YYYY');
 
   let now = new Date();
@@ -199,11 +199,7 @@ async function checkEvents(chat_id,current_id, halfDay = false) {
   *Boshlanish vaqti:* ${ev.time}
   *Joy:* ${ev.location}`;
 
-  if (ev.type?.toLowerCase() === "data") {
-    await bot.sendMessage(DATA_GROUP_ID, message, { parse_mode: 'Markdown' });
-  } else {
-    await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
-  }
+  await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
   }
 
   await bot.sendMessage(ADMIN_ID, '📨 Uchrashuv xabarlari yuborildi.');
@@ -288,17 +284,17 @@ bot.onText(/^\/test_birthdays$/, async (msg) => {
 
 bot.onText(/^\/test_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
-  await checkEvents(TEST_GROUP_URL, msg.from.id);
+  await checkEvents(TEST_GROUP_URL);
 });
 
 bot.onText(/^\/check_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
-  await checkEvents(GROUP_CHAT_ID, msg.from.id);
+  await checkEvents(GROUP_CHAT_ID);
 });
 
 bot.onText(/^\/check_halfday_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
-  await checkEvents(GROUP_CHAT_ID, msg.from.id, true);
+  await checkEvents(GROUP_CHAT_ID, true);
 });
 
 // --------------------
@@ -329,6 +325,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
