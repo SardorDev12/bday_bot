@@ -111,28 +111,31 @@ bot.on('message', async (msg) => {
   // Step 5: Recurring?
   if (state.step === 5) {
     state.data.recurring = text.trim() === "1";
-    state.step = 6;
 
     if (state.data.recurring) {
+      state.step = 6;
       return bot.sendMessage(chatId, 'Uchrashuv *yakuniy sanasini* kiriting (KK.OO.YYYY):', { parse_mode: 'Markdown' });
     } else {
+      state.step = 7;
       return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, DATA, TRANSFORMATION):', { parse_mode: 'Markdown' });
     }
   }
 
   // Step 6: End date OR type
   if (state.step === 6) {
-    if (state.data.recurring) {
-      state.data.endDate = text;
-    } else {
-      state.data.type = text;
-    }
+    state.data.endDate = text;
     state.step = 7;
+    return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, DATA, TRANSFORMATION):', { parse_mode: 'Markdown' });
+  }
+
+   if (state.step === 7) {
+    state.data.type = text;
+    state.step = 8;
     return bot.sendMessage(chatId, 'Uchrashuv *manzilini* kiriting:', { parse_mode: 'Markdown' });
   }
 
   // Step 7: Location + SAVE
-  if (state.step === 7) {
+  if (state.step === 8) {
     state.data.location = text;
 
     try {
@@ -147,7 +150,7 @@ bot.on('message', async (msg) => {
   }
 });
 
-async function checkEvents(chat_id, halfDay = false) {
+async function checkEvents(chat_id, current_chat, halfDay = false) {
   const today = dayjs().format('DD.MM.YYYY');
 
   let now = new Date();
@@ -186,7 +189,7 @@ async function checkEvents(chat_id, halfDay = false) {
 
   // If no events found
   if (!events?.length) {
-    await bot.sendMessage(current_id, '📭 Bugun uchrashuv rejalashtirilmagan.');
+    await bot.sendMessage(current_chat, '📭 Bugun uchrashuv rejalashtirilmagan.');
     return false;
   }
 
@@ -202,7 +205,7 @@ async function checkEvents(chat_id, halfDay = false) {
   await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
   }
 
-  await bot.sendMessage(ADMIN_ID, '📨 Uchrashuv xabarlari yuborildi.');
+  await bot.sendMessage(current_chat, '📨 Uchrashuv xabarlari yuborildi.');
   return true;
 }
 
@@ -284,17 +287,17 @@ bot.onText(/^\/test_birthdays$/, async (msg) => {
 
 bot.onText(/^\/test_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
-  await checkEvents(TEST_GROUP_URL);
+  await checkEvents(TEST_GROUP_URL,msg.from.id );
 });
 
 bot.onText(/^\/check_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
-  await checkEvents(GROUP_CHAT_ID);
+  await checkEvents(GROUP_CHAT_ID,msg.from.id);
 });
 
 bot.onText(/^\/check_halfday_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
-  await checkEvents(GROUP_CHAT_ID, true);
+  await checkEvents(GROUP_CHAT_ID,msg.from.id, true);
 });
 
 // --------------------
@@ -325,6 +328,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
