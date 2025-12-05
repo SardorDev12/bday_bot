@@ -59,9 +59,22 @@ const bot = new TelegramBot(TOKEN, { polling: true });
 
 // Event Management
 const userState = {};
+let allowedIDs = []
+
+async function loadAllowedUsers() {
+  const users = await User.find({
+    date: { $ne: "" } 
+  });
+
+  allowedIDs = users.map(u => String(u.chatId));
+}
+loadAllowedUsers();
 
 bot.onText(/^\/add_event$/, (msg) => {
   const chatId = msg.chat.id;
+ if (!allowedIds.includes(String(chatId))) {
+  return bot.sendMessage(chatId, "❌ Sizga uchrashuv qo‘shishga ruxsat berilmagan.");
+}
 
   if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) return;
 
@@ -376,6 +389,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
