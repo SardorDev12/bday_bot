@@ -152,17 +152,17 @@ bot.on('message', async (msg) => {
 
     const message =
 `📌 *Ma'lumotlarni tasdiqlaysizmi?*
-
-*Mavzu:* ${state.data.title}
-*Ishtirokchilar:* ${state.data.guests.join(', ')}
-*Sana:* ${state.data.date}
-*Vaqt:* ${state.data.time}
-*Joy:* ${state.data.location}
-*Takroriymi:* ${state.data.recurring ? "Ha" : "Yo‘q"}
-${state.data.recurring ? `*Yakun sanasi:* ${state.data.endDate}` : ""}
-
-❌ Bekor qilish: /cancel  
-✅ Tasdiqlash: /confirm`;
+      `📅 *Bugun uchrashuv bor!*
+      *Mavzu:* ${ev.title}
+      *Ishtirokchilar:* ${ev.guests.join(', ')}
+      *Uchrashuv sanasi:* ${ev.date}
+      *Boshlanish vaqti:* ${ev.time}
+      *Joy:* ${ev.location}
+      ${ev.recurring ? `*Takrorlanadi:* Ha` : `*Takrorlanadi:* Yo‘q`}
+      ${ev.endDate ? `*Tugash sanasi:* ${ev.endDate}` : ""}`;
+  
+      ❌ Bekor qilish: /cancel  
+      ✅ Tasdiqlash: /confirm`;
 
     return bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
@@ -238,12 +238,14 @@ async function checkEvents(chat_id, current_chat = ADMIN_ID, halfDay = false) {
   // Send event messages
   for (const ev of events) {
   const message = 
-  `📅 *Bugun uchrashuv bor!*
-  *Mavzu:* ${ev.title}
-  *Ishtirokchilar:* ${ev.guests.join(', ')}
-  *Uchrashuv sanasi:* ${ev.date}
-  *Boshlanish vaqti:* ${ev.time}
-  *Joy:* ${ev.location}`;
+    `📅 *Bugun uchrashuv bor!*
+    *Mavzu:* ${ev.title}
+    *Ishtirokchilar:* ${ev.guests.join(', ')}
+    *Uchrashuv sanasi:* ${ev.date}
+    *Boshlanish vaqti:* ${ev.time}
+    *Joy:* ${ev.location}
+    ${ev.recurring ? `*Takrorlanadi:* Ha` : `*Takrorlanadi:* Yo‘q`}
+    ${ev.endDate ? `*Tugash sanasi:* ${ev.endDate}` : ""}`;
 
   await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
   }
@@ -371,6 +373,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
