@@ -150,19 +150,22 @@ bot.on('message', async (msg) => {
     state.data.location = text;
     state.step = 9;
 
-    const message =
-`📌 *Ma'lumotlarni tasdiqlaysizmi?*
-      📅 *Bugun uchrashuv bor!*
-      *Mavzu:* ${ev.title}
-      *Ishtirokchilar:* ${ev.guests.join(', ')}
-      *Uchrashuv sanasi:* ${ev.date}
-      *Boshlanish vaqti:* ${ev.time}
-      *Joy:* ${ev.location}
-      ${ev.recurring ? `*Takrorlanadi:* Ha` : `*Takrorlanadi:* Yo‘q`}
-      ${ev.endDate ? `*Tugash sanasi:* ${ev.endDate}` : ""}`;
-  
-      ❌ Bekor qilish: /cancel  
-      ✅ Tasdiqlash: /confirm`;
+    const d = state.data;
+    
+    const message = `
+        📌 *Ma'lumotlarni tasdiqlaysizmi?*
+        
+        *Mavzu:* ${d.title}
+        *Ishtirokchilar:* ${d.guests.join(', ')}
+        *Uchrashuv sanasi:* ${d.date}
+        *Boshlanish vaqti:* ${d.time}
+        *Joy:* ${d.location}
+        ${d.recurring ? `*Takrorlanadi:* Ha` : `*Takrorlanadi:* Yo‘q`}
+        ${d.endDate ? `*Tugash sanasi:* ${d.endDate}` : ""}
+        
+        ❌ Bekor qilish: /cancel  
+        ✅ Tasdiqlash: /confirm
+        `;
 
     return bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }
@@ -373,6 +376,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
