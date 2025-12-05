@@ -67,10 +67,10 @@ async function loadAllowedUsers() {
   });
 
   allowedIDs = users.map(u => String(u.chatId));
-}
-loadAllowedUsers();
 
-bot.onText(/^\/add_event$/, (msg) => {
+bot.onText(/^\/add_event$/, async (msg) => {
+await loadAllowedUsers();
+}
   const chatId = msg.chat.id;
  if (!allowedIds.includes(String(chatId))) {
   return bot.sendMessage(chatId, "❌ Sizga uchrashuv qo‘shishga ruxsat berilmagan.");
@@ -389,6 +389,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
