@@ -152,7 +152,7 @@ bot.on('message', async (msg) => {
 
     const message =
 `📌 *Ma'lumotlarni tasdiqlaysizmi?*
-      `📅 *Bugun uchrashuv bor!*
+      📅 *Bugun uchrashuv bor!*
       *Mavzu:* ${ev.title}
       *Ishtirokchilar:* ${ev.guests.join(', ')}
       *Uchrashuv sanasi:* ${ev.date}
@@ -373,6 +373,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
