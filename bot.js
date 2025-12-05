@@ -278,24 +278,25 @@ bot.onText(/^\/check_halfday_events$/, (msg) => {
 // --------------------
 // HTTP KEEP-ALIVE
 // --------------------
-http.createServer((req, res) => {
- if (req.url === '/check') {
-      await runBirthdayCheck(GROUP_CHAT_ID);
-      res.end('Cron executed\n');
-      return;
-    }
+http.createServer(async (req, res) => {
+  if (req.url === "/check") {
+    await runBirthdayCheck(GROUP_CHAT_ID);
+    res.end("Cron executed\n");
+    return;
+  }
 
-    if (req.url === '/events') {
-      await checkEvents(GROUP_CHAT_ID, ADMIN_ID);
-      res.end('Full-day events executed');
-      return;
-    }
+  if (req.url === "/events") {
+    await checkEvents(GROUP_CHAT_ID, ADMIN_ID);
+    res.end("Full-day events executed\n");
+    return;
+  }
 
-    if (req.url === '/events/half') {
-      await checkEvents(GROUP_CHAT_ID, ADMIN_ID, true);
-      res.end('Half-day events executed');
-      return;
-    }
+  if (req.url === "/events/half") {
+    await checkEvents(GROUP_CHAT_ID, ADMIN_ID, true);
+    res.end("Half-day events executed\n");
+    return;
+  }
 
-    res.end('Bot is running\n');
+  res.end("Bot is running\n");
 }).listen(process.env.PORT || 3000);
+
