@@ -59,20 +59,27 @@ const bot = new TelegramBot(TOKEN, { polling: true });
 
 // Event Management
 const userState = {};
-let allowedIDs = []
+let allowedIds = [];
 
 async function loadAllowedUsers() {
+  // Load only users who have a valid (non-empty and non-00.00) date
   const users = await User.find({
-    date: { $ne: "" } 
+    date: { $ne: "", $ne: "00.00" }
   });
 
-  allowedIDs = users.map(u => String(u.chatId));
+  allowedIds = users.map(u => String(u.chatId));
+  console.log("Allowed users:", allowedIDs);
+}
+
+// Load once at bot startup
+loadAllowedUsers();
 
 bot.onText(/^\/add_event$/, async (msg) => {
-await loadAllowedUsers();
-}
   const chatId = msg.chat.id;
- if (!allowedIds.includes(String(chatId))) {
+
+  await loadAllowedUsers();
+  
+ if (!allowedIds.includes(chatId)) {
   return bot.sendMessage(chatId, "❌ Sizga uchrashuv qo‘shishga ruxsat berilmagan.");
 }
 
@@ -352,12 +359,12 @@ bot.onText(/^\/test_events$/, async (msg) => {
 });
 
 bot.onText(/^\/check_events$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  if (!allowedIds.includes(msg.chat.id)) return;
   await checkEvents(GROUP_CHAT_ID,msg.from.id);
 });
 
 bot.onText(/^\/check_halfday_events$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  if (!allowedIds.includes(msg.from.id)) return;
   await checkEvents(GROUP_CHAT_ID,msg.from.id, true);
 });
 
@@ -389,6 +396,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
