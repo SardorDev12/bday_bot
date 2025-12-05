@@ -63,7 +63,8 @@ const userState = {};
 bot.onText(/^\/add_event$/, (msg) => {
   const chatId = msg.chat.id;
 
-if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) return;
+  if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) return;
+
   userState[chatId] = { step: 1, data: {} };
 
   bot.sendMessage(chatId, 'Uchrashuv *mavzusini* kiriting:', {
@@ -76,7 +77,9 @@ bot.on('message', async (msg) => {
   const text = msg.text;
 
   if (!userState[chatId]) return;
-  if (text.startsWith('/')) return;
+
+  // allow /confirm and /cancel ONLY at step 9
+  if (text.startsWith('/') && userState[chatId].step !== 9) return;
 
   const state = userState[chatId];
 
@@ -96,6 +99,10 @@ bot.on('message', async (msg) => {
 
   // Step 3: Date
   if (state.step === 3) {
+    const isValidDate = (d) => /^\d{2}\.\d{2}\.\d{4}$/.test(d);
+    if (!isValidDate(text)) {
+      return bot.sendMessage(chatId, "❌ Sana formati noto‘g‘ri. Masalan: 03.12.2025");
+    }
     state.data.date = text;
     state.step = 4;
     return bot.sendMessage(chatId, 'Uchrashuv *vaqtini* kiriting (SS:MM):', { parse_mode: 'Markdown' });
@@ -108,49 +115,76 @@ bot.on('message', async (msg) => {
     return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (1 = ha, 0 = yo‘q):', { parse_mode: 'Markdown' });
   }
 
-  // Step 5: Recurring?
+  // Step 5: Recurring
   if (state.step === 5) {
     state.data.recurring = text.trim() === "1";
 
     if (state.data.recurring) {
       state.step = 6;
-      return bot.sendMessage(chatId, 'Uchrashuv *yakuniy sanasini* kiriting (KK.OO.YYYY):', { parse_mode: 'Markdown' });
+      return bot.sendMessage(chatId, 'Uchrashuv *yakuniy sanasini* kiriting (KK.OO.YYYY):',
+        { parse_mode: 'Markdown' });
     } else {
       state.step = 7;
-      return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, DATA, TRANSFORMATION):', { parse_mode: 'Markdown' });
+      return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, DATA, TRANSFORMATION):',
+        { parse_mode: 'Markdown' });
     }
   }
 
-  // Step 6: End date OR type
+  // Step 6: End date
   if (state.step === 6) {
     state.data.endDate = text;
     state.step = 7;
-    return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, DATA, TRANSFORMATION):', { parse_mode: 'Markdown' });
+    return bot.sendMessage(chatId, 'Uchrashuv *turini* kiriting (PM, DATA, TRANSFORMATION):',
+      { parse_mode: 'Markdown' });
   }
 
-   if (state.step === 7) {
+  // Step 7: Type
+  if (state.step === 7) {
     state.data.type = text;
     state.step = 8;
     return bot.sendMessage(chatId, 'Uchrashuv *manzilini* kiriting:', { parse_mode: 'Markdown' });
   }
 
-  // Step 7: Location + SAVE
+  // Step 8: Location + CONFIRM PREVIEW
   if (state.step === 8) {
     state.data.location = text;
+    state.step = 9;
 
-    try {
-      await Event.create(state.data);
-    } catch (err) {
-      console.error("❌ Error saving event:", err);
-      return bot.sendMessage(chatId, "Xatolik: uchrashuv saqlanmadi.");
+    const message =
+`📌 *Ma'lumotlarni tasdiqlaysizmi?*
+
+*Mavzu:* ${state.data.title}
+*Ishtirokchilar:* ${state.data.guests.join(', ')}
+*Sana:* ${state.data.date}
+*Vaqt:* ${state.data.time}
+*Joy:* ${state.data.location}
+*Takroriymi:* ${state.data.recurring ? "Ha" : "Yo‘q"}
+${state.data.recurring ? `*Yakun sanasi:* ${state.data.endDate}` : ""}
+
+❌ Bekor qilish: /cancel  
+✅ Tasdiqlash: /confirm`;
+
+    return bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+  }
+
+  // Step 9: Confirm or cancel
+  if (state.step === 9) {
+    if (text === "/cancel") {
+      delete userState[chatId];
+      return bot.sendMessage(chatId, "❌ Bekor qilindi.");
     }
 
-    delete userState[chatId];
-    return bot.sendMessage(chatId, "✅ Uchrashuv saqlandi.");
+    if (text === "/confirm") {
+      await Event.create(state.data);
+      delete userState[chatId];
+      return bot.sendMessage(chatId, "✅ Uchrashuv muvaffaqiyatli saqlandi!");
+    }
+
+    return bot.sendMessage(chatId, "❗ Iltimos, /confirm yoki /cancel yuboring.");
   }
 });
 
-async function checkEvents(chat_id, current_chat, halfDay = false) {
+async function checkEvents(chat_id, current_chat = ADMIN_ID, halfDay = false) {
   const today = dayjs().format('DD.MM.YYYY');
 
   let now = new Date();
@@ -159,16 +193,24 @@ async function checkEvents(chat_id, current_chat, halfDay = false) {
 
   if (!halfDay) {
   events = await Event.find({
-    $and: [
-      { date: today },        
-      { recurring: true, endDate: {$gte: today}  }
+    $or: [
+      { date: today },
+      {
+      recurring: true,
+      date: { $lte: today },
+      endDate: { $gte: today }
+    }
     ]
   });
   } else {
     const allEvents = await Event.find({
     $or: [
-      { date: today },        
-      { recurring: true }
+      { date: today },
+     {
+      recurring: true,
+      date: { $lte: today },
+      endDate: { $gte: today }
+    }
     ]
   });
 
@@ -321,7 +363,7 @@ http
     }
 
     if (req.url === '/events/half') {
-      await checkEvents(GROUP_CHAT_ID,ADMIN_ID, true);
+      await checkEvents(GROUP_CHAT_ID, ADMIN_ID, true);
       res.end('Half-day events executed');
       return;
     }
@@ -329,6 +371,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
