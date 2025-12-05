@@ -68,7 +68,6 @@ async function loadAllowedUsers() {
   });
 
   allowedIds = users.map(u => String(u.chatId));
-  console.log("Allowed users:", allowedIDs);
 }
 
 // Load once at bot startup
@@ -396,6 +395,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
