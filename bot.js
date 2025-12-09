@@ -56,6 +56,7 @@ const userState = {};
 
 bot.onText(/^\/add_event$/, async (msg) => {
   const chatId = msg.chat.id;
+  console.log(typeof ALLOWED_USERS )
 
   if (ALLOWED_USERS.includes(Number(chatId))){
      bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
@@ -401,6 +402,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
