@@ -11,7 +11,7 @@ const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const MONGO_URL = process.env.MONGO_URL;
 const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
 const EVENT_MANAGER_ID = process.env.EVENT_MANAGER_ID;
-const ALLOWED_USERS = JSON.parse(process.env.ALLOWED_USERS);
+const ALLOWED_USERS = process.env.ALLOWED_USERS;
   
 // connect mongoose
 async function connectDB() {
@@ -57,6 +57,7 @@ const userState = {};
 bot.onText(/^\/add_event$/, async (msg) => {
   const chatId = msg.chat.id;
   console.log(typeof ALLOWED_USERS )
+  console.log(ALLOWED_USERS )
 
   if (!ALLOWED_USERS.includes(Number(chatId))){
      bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
@@ -402,6 +403,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
