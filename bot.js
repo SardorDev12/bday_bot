@@ -155,15 +155,15 @@ bot.on('message', async (msg) => {
     
     *Uchrashuv sanasi:* ${state.data.date}
     
-    ${state.data.endDate ? `*Tugash sanasi:* ${state.data.endDate}` : ""}
-    
-    ${state.data.recurring ? `*Takroriymi?:* ${state.data.recurring}` : ""}
-    
     *Boshlanish vaqti:* ${state.data.time}
-
+    
     *Uchrashuv turi:* ${state.data.type}
-        
+    
     *Joy:* ${state.data.location}
+    
+    *Tugash sanasi:* ${state.data.endDate}
+    
+    *Takroriymi?:* ${state.data.recurring ? "Ha" : "Yo‘q"}
     
     ❌ Bekor qilish: /cancel  
     ✅ Tasdiqlash: /confirm
@@ -250,9 +250,9 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
     
     *Boshlanish vaqti:* ${ev.time}
 
-    *Uchrashuv turi:* ${ev.type}
-    
     *Joy:* ${ev.location}`;
+    
+    ${ev.type ? `*Uchrashuv turi:* ${ev.type}` : ""}
 
   await bot.sendMessage(receiver_chat, message, { parse_mode: 'Markdown' });
   }
@@ -314,6 +314,7 @@ bot.setMyCommands([
   { command: "t_events", description: "Test bugungi uchrashuvlar" },
   { command: "h_events", description: "Yarim kunlik uchrashuvlar" },
   { command: "t_hevents", description: "Test - Yarim kunlik uchrashuvlar" },
+  { command: "add_event", description: "Uchrashuv qo'shish" },
 ]);
 
 bot.onText(/^\/start$/, async (msg) => {
@@ -387,5 +388,6 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
