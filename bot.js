@@ -241,18 +241,19 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
 
   // Send event messages
   for (const ev of events) {
-  const message = 
-    `📅 *Bugun uchrashuv bor!*
+  const message = `
+    📅 *Bugun uchrashuv bor!*
     
     *Mavzu:* ${ev.title}
     
     *Ishtirokchilar:* ${ev.guests.join(', ')}
     
     *Boshlanish vaqti:* ${ev.time}
-
-    *Joy:* ${ev.location}`
     
-    ${ev.type} ? `*Uchrashuv turi:* ${ev.type}` : ""}
+    *Joy:* ${ev.location}
+    
+    ${ev.type ? `*Uchrashuv turi:* ${ev.type}` : ""}
+    `;
 
   await bot.sendMessage(receiver_chat, message, { parse_mode: 'Markdown' });
   }
@@ -388,6 +389,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
