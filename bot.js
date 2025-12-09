@@ -250,9 +250,9 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
     
     *Boshlanish vaqti:* ${ev.time}
 
-    *Joy:* ${ev.location}`;
+    *Joy:* ${ev.location}`
     
-    ${ev.type ? `*Uchrashuv turi:* ${ev.type}` : ""}
+    ${ev.type} ? `*Uchrashuv turi:* ${ev.type}` : ""}
 
   await bot.sendMessage(receiver_chat, message, { parse_mode: 'Markdown' });
   }
@@ -388,6 +388,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
