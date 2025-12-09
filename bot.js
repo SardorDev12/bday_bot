@@ -11,11 +11,8 @@ const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const MONGO_URL = process.env.MONGO_URL;
 const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
 const EVENT_MANAGER_ID = process.env.EVENT_MANAGER_ID;
-const DATA_GROUP_ID = process.env.DATA_GROUP_ID;
 
-// --------------------
-// CONNECT MONGOOSE
-// --------------------
+// connect mongoose
 async function connectDB() {
   try {
     await mongoose.connect(MONGO_URL);
@@ -27,9 +24,7 @@ async function connectDB() {
 }
 connectDB();
 
-// --------------------
-// MODELS
-// --------------------
+// models
 const userSchema = new mongoose.Schema({
   chatId: Number,
   name: { type: String, required: true },
@@ -52,37 +47,19 @@ const eventSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Event = mongoose.model('Event', eventSchema);
 
-// --------------------
-// BOT
-// --------------------
+// bot instance
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 // Event Management
 const userState = {};
-let allowedIds = [];
-
-async function loadAllowedUsers() {
-  const users = await User.find({
-    date: { $ne: ""}
-  });
-
-  allowedIds = users.map(u => String(u.chatId));
-}
-
-// Load once at bot startup
-loadAllowedUsers();
 
 bot.onText(/^\/add_event$/, async (msg) => {
   const chatId = msg.chat.id;
 
-  await loadAllowedUsers();
-  
-  
-if (!allowedIds.includes(chatId)) {
-  return bot.sendMessage(chatId, "❌ Sizga uchrashuv qo‘shishga ruxsat berilmagan.");
-}
-
-  if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID) return;
+  if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID){
+     bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
+     return;
+  }
 
   userState[chatId] = { step: 1, data: {} };
 
@@ -96,9 +73,6 @@ bot.on('message', async (msg) => {
   const text = msg.text;
 
   if (!userState[chatId]) return;
-
-  // allow /confirm and /cancel ONLY at step 9
-  if (text.startsWith('/') && userState[chatId].step !== 9) return;
 
   const state = userState[chatId];
 
@@ -120,7 +94,7 @@ bot.on('message', async (msg) => {
   if (state.step === 3) {
     const isValidDate = (d) => /^\d{2}\.\d{2}\.\d{4}$/.test(d);
     if (!isValidDate(text)) {
-      return bot.sendMessage(chatId, "❌ Sana formati noto‘g‘ri. Masalan: 03.12.2025");
+      return bot.sendMessage(chatId, "❌ Sana formati noto‘g‘ri. To'g'ri format: 03.12.2025");
     }
     state.data.date = text;
     state.step = 4;
@@ -129,9 +103,13 @@ bot.on('message', async (msg) => {
 
   // Step 4: Time
   if (state.step === 4) {
+    const isValidTime = (d) => /^\d{2}\:\d{2}$/.test(d);
+    if (!isValidTime(text)) {
+      return bot.sendMessage(chatId, "❌ Vaqt formati noto‘g‘ri. To'g'ri format: 10.30");
+    }
     state.data.time = text;
     state.step = 5;
-    return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (1 = ha, 0 = yo‘q):', { parse_mode: 'Markdown' });
+    return bot.sendMessage(chatId, 'Uchrashuv *takroriymi?* (0 = Yo‘q, 1 = Ha):', { parse_mode: 'Markdown' });
   }
 
   // Step 5: Recurring
@@ -168,26 +146,29 @@ bot.on('message', async (msg) => {
     state.data.location = text;
     state.step = 9;
 
-    const d = state.data;
-    
     const message = `
         📌 *Ma'lumotlarni tasdiqlaysizmi?*
         
-        *Mavzu:* ${d.title}
-        *Ishtirokchilar:* ${d.guests.join(', ')}
-        *Uchrashuv sanasi:* ${d.date}
-        *Boshlanish vaqti:* ${d.time}
-        *Joy:* ${d.location}
-        ${d.recurring ? *Takrorlanadi:* Ha : *Takrorlanadi:* Yo‘q}
-        ${d.endDate ? *Tugash sanasi:* ${d.endDate} : ""}
+        *Mavzu:* ${state.data.title}
+        
+        *Ishtirokchilar:* ${state.data.guests.join(', ')}
+        
+        *Uchrashuv sanasi:* ${state.data.date}
+        
+        *Boshlanish vaqti:* ${state.data.time}
+        
+        *Joy:* ${state.data.location}
+        
+        ${state?.data.recurring} ? "*Takrorlanadi:* Ha" : ""}
+        
+        ${state?.data.endDate} ? "*Tugash sanasi:*" ${state.data.endDate} : ""}
         
         ❌ Bekor qilish: /cancel  
         ✅ Tasdiqlash: /confirm
         `;
 
     return bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-  }
-
+  }  
   // Step 9: Confirm or cancel
   if (state.step === 9) {
     if (text === "/cancel") {
@@ -200,41 +181,41 @@ bot.on('message', async (msg) => {
       delete userState[chatId];
       return bot.sendMessage(chatId, "✅ Uchrashuv muvaffaqiyatli saqlandi!");
     }
-
-    return bot.sendMessage(chatId, "❗️ Iltimos, /confirm yoki /cancel yuboring.");
   }
 });
 
-async function checkEvents(chat_id, current_chat = ADMIN_ID, halfDay = false) {
-  const today = dayjs().format('DD.MM.YYYY');
-
+async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = false) {
   let now = new Date();
   let currentHours = now.getHours();
   let events;
+  const today = dayjs().format("DD.MM.YYYY");
+  const todayNorm = normalize(today);
 
+  function normalize(d) {
+    const [dd, mm, yyyy] = d.split(".");
+    return `${yyyy}-${mm}-${dd}`; // sortable
+  }
+  
+  let allEvents = await Event.find({
+    $or: [
+      { date: today },
+      { recurring: true }
+    ]
+  });
+  
+  // Now filter recurring by normalized values
+  allEvents = allEvents.filter(ev => {
+    if (!ev.recurring) return true;
+  
+    const evStart = normalize(ev.date);
+    const evEnd = normalize(ev.endDate);
+  
+    return evStart <= todayNorm && evEnd >= todayNorm;
+  });
+  
   if (!halfDay) {
-  events = await Event.find({
-    $or: [
-      { date: today },
-      {
-      recurring: true,
-      date: { $lte: today },
-      endDate: { $gte: today }
-    }
-    ]
-  });
+  events = allEvents;
   } else {
-    const allEvents = await Event.find({
-    $or: [
-      { date: today },
-     {
-      recurring: true,
-      date: { $lte: today },
-      endDate: { $gte: today }
-    }
-    ]
-  });
-
     if (currentHours < 14) {
       events = allEvents.filter(ev => {
         if (!ev.time) return false;
@@ -260,32 +241,36 @@ async function checkEvents(chat_id, current_chat = ADMIN_ID, halfDay = false) {
   for (const ev of events) {
   const message = 
     `📅 *Bugun uchrashuv bor!*
+    
     *Mavzu:* ${ev.title}
+    
     *Ishtirokchilar:* ${ev.guests.join(', ')}
+    
     *Uchrashuv sanasi:* ${ev.date}
+    
     *Boshlanish vaqti:* ${ev.time}
+    
     *Joy:* ${ev.location}
-    ${ev.recurring ? *Takrorlanadi:* Ha : *Takrorlanadi:* Yo‘q}
-    ${ev.endDate ? *Tugash sanasi:* ${ev.endDate} : ""}`;
+    
+    ${ev?.recurring} ? "*Takrorlanadi:* Ha" : ""}
+    
+    ${ev?.endDate} ? "*Tugash sanasi:*" ${ev.endDate} : ""}`;
 
-  await bot.sendMessage(chat_id, message, { parse_mode: 'Markdown' });
+  await bot.sendMessage(receiver_chat, message, { parse_mode: 'Markdown' });
   }
 
   await bot.sendMessage(current_chat, '📨 Uchrashuv xabarlari yuborildi.');
   return true;
 }
 
-
-// --------------------
-// SHARED BIRTHDAY CHECK FUNCTION
-// --------------------
+// birthdays
 async function runBirthdayCheck(chat_id) {
   const users = await User.find({ date: { $ne: '' } });
 
   const today = new Date();
   const dd = String(today.getDate()).padStart(2, '0');
   const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const todayStr = ${dd}.${mm};
+  const todayStr = `${dd}.${mm}`;
 
   const birthdayPeople = users.filter((u) => u.date === todayStr);
 
@@ -296,6 +281,7 @@ async function runBirthdayCheck(chat_id) {
 
   for (const p of birthdayPeople) {
     const m_dept = `🎂 Hurmatli <a href="tg://user?id=${p.chatId}">${p.name}</a>!
+    
 🎉 Sizni bugungi tavallud ayyomingiz bilan chin qalbimizdan tabriklaymiz! 🎉
 Sizga mustahkam sog‘liq, bitmas-tuganmas omad, ezgu orzu-intilishlaringizning ro‘yobga chiqishini tilaymiz.  
 Hayotingizda doimo quvonch, shodlik va yangi yutuqlar hamroh bo‘lsin.
@@ -321,12 +307,20 @@ Hayotingizda doimo quvonch, shodlik va yangi yutuqlar hamroh bo‘lsin.
   return true;
 }
 
-// --------------------
-// BOT COMMANDS
-// --------------------
+// commands
+bot.setMyCommands([
+  { command: "start", description: "Botni ishga tushirish" },
+  { command: "b_days", description: "Bugungi tug'ilgan kunlar" },
+  { command: "t_bdays", description: "Test - Bugungi tug'ilgan kunlar" },
+  { command: "events", description: "Bugungi uchrashuvlar" },
+  { command: "t_events", description: "Test bugungi uchrashuvlar" },
+  { command: "h_events", description: "Yarim kunlik uchrashuvlar" },
+  { command: "t_hevents", description: "Test - Yarim kunlik uchrashuvlar" },
+]);
+
 bot.onText(/^\/start$/, async (msg) => {
   const chatId = msg.chat.id;
-  const name = msg.from.first_name  'Unknown';
+  const name = msg.from.first_name || 'Unknown';
 
   let user = await User.findOne({ chatId });
 
@@ -340,36 +334,38 @@ bot.onText(/^\/start$/, async (msg) => {
   }
 });
 
-bot.onText(/^\/check_birthdays$/, async (msg) => {
+bot.onText(/^\/b_days$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await runBirthdayCheck(GROUP_CHAT_ID);
 });
 
-bot.onText(/^\/test_birthdays$/, async (msg) => {
+bot.onText(/^\/t_bdays$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) return;
   await runBirthdayCheck(TEST_GROUP_URL);
 });
 
-bot.onText(/^\/test_events$/, async (msg) => {
+bot.onText(/^\/events$/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  await checkEvents(GROUP_CHAT_ID,msg.from.id);
+});
+
+bot.onText(/^\/t_events$/, async (msg) => {
   if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
   await checkEvents(TEST_GROUP_URL,msg.from.id );
 });
 
-bot.onText(/^\/check_events$/, async (msg) => {
-  if (!allowedIds.includes(msg.chat.id)) return;
-  await checkEvents(GROUP_CHAT_ID,msg.from.id);
-});
-
-bot.onText(/^\/check_halfday_events$/, async (msg) => {
-  if (!allowedIds.includes(msg.from.id)) return;
+bot.onText(/^\/h_events$/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
   await checkEvents(GROUP_CHAT_ID,msg.from.id, true);
 });
 
-// --------------------
-// HTTP SERVER
-// BASE URL TRIGGERS CHECK
-// --------------------
-const PORT = process.env.PORT  3000;
+bot.onText(/^\/t_hevents$/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  await checkEvents(TEST_GROUP_URL,msg.from.id, true );
+});
+
+// url triggers for cron job servive
+const PORT = process.env.PORT || 3000;
 http
   .createServer(async (req, res) => {
     if (req.url === '/check') {
@@ -393,3 +389,4 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
