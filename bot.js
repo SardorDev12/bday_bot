@@ -11,7 +11,8 @@ const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const MONGO_URL = process.env.MONGO_URL;
 const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
 const EVENT_MANAGER_ID = process.env.EVENT_MANAGER_ID;
-
+const ALLOWED_USERS = process.env.ALLOWED_USERS;
+  
 // connect mongoose
 async function connectDB() {
   try {
@@ -56,7 +57,7 @@ const userState = {};
 bot.onText(/^\/add_event$/, async (msg) => {
   const chatId = msg.chat.id;
 
-  if (String(chatId) !== ADMIN_ID && String(chatId) !== EVENT_MANAGER_ID){
+  if (ALLOWED_USERS.includes(Number(chatId))){
      bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
      return;
   }
@@ -345,22 +346,28 @@ bot.onText(/^\/t_bdays$/, async (msg) => {
 });
 
 bot.onText(/^\/events$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  if (ALLOWED_USERS.includes(Number(chatId))){
+     bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
+     return;
+  }
   await checkEvents(GROUP_CHAT_ID,msg.from.id);
 });
 
 bot.onText(/^\/t_events$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  if (String(msg.from.id) !== ADMIN_ID) return;
   await checkEvents(TEST_GROUP_URL,msg.from.id );
 });
 
 bot.onText(/^\/h_events$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  if (ALLOWED_USERS.includes(Number(chatId))){
+     bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
+     return;
+  }
   await checkEvents(GROUP_CHAT_ID,msg.from.id, true);
 });
 
 bot.onText(/^\/t_hevents$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID && String(msg.from.id) !== EVENT_MANAGER_ID) return;
+  if (String(msg.from.id) !== ADMIN_ID) return;
   await checkEvents(TEST_GROUP_URL,msg.from.id, true );
 });
 
@@ -389,6 +396,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
