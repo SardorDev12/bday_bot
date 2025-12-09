@@ -343,12 +343,18 @@ bot.onText(/^\/start$/, async (msg) => {
 });
 
 bot.onText(/^\/b_days$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) return;
+  if (String(msg.from.id) !== ADMIN_ID){
+     bot.sendMessage(msg.chat.id,"Ruxsat etilmagan urinish!")
+     return;
+  }
   await runBirthdayCheck(GROUP_CHAT_ID);
 });
 
 bot.onText(/^\/t_bdays$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) return;
+  if (String(msg.from.id) !== ADMIN_ID){
+     bot.sendMessage(msg.chat.id,"Ruxsat etilmagan urinish!")
+     return;
+  }
   await runBirthdayCheck(TEST_GROUP_URL);
 });
 
@@ -361,7 +367,10 @@ bot.onText(/^\/events$/, async (msg) => {
 });
 
 bot.onText(/^\/t_events$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) return;
+  if (String(msg.from.id) !== ADMIN_ID){
+     bot.sendMessage(msg.chat.id,"Ruxsat etilmagan urinish!")
+     return;
+  }
   await checkEvents(TEST_GROUP_URL,msg.from.id );
 });
 
@@ -374,7 +383,10 @@ bot.onText(/^\/h_events$/, async (msg) => {
 });
 
 bot.onText(/^\/t_hevents$/, async (msg) => {
-  if (String(msg.from.id) !== ADMIN_ID) return;
+  if (String(msg.from.id) !== ADMIN_ID){
+     bot.sendMessage(msg.chat.id,"Ruxsat etilmagan urinish!")
+     return;
+  }
   await checkEvents(TEST_GROUP_URL,msg.from.id, true );
 });
 
@@ -403,6 +415,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
