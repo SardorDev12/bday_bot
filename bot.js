@@ -147,25 +147,27 @@ bot.on('message', async (msg) => {
     state.step = 9;
 
     const message = `
-        📌 *Ma'lumotlarni tasdiqlaysizmi?*
+    📌 *Ma'lumotlarni tasdiqlaysizmi?*
+    
+    *Mavzu:* ${state.data.title}
+    
+    *Ishtirokchilar:* ${state.data.guests.join(', ')}
+    
+    *Uchrashuv sanasi:* ${state.data.date}
+    
+    ${state.data.endDate ? `*Tugash sanasi:* ${state.data.endDate}` : ""}
+    
+    ${state.data.recurring ? `*Takroriymi?:* ${state.data.recurring}` : ""}
+    
+    *Boshlanish vaqti:* ${state.data.time}
+
+    *Uchrashuv turi:* ${state.data.type}
         
-        *Mavzu:* ${state.data.title}
-        
-        *Ishtirokchilar:* ${state.data.guests.join(', ')}
-        
-        *Uchrashuv sanasi:* ${state.data.date}
-        
-        *Boshlanish vaqti:* ${state.data.time}
-        
-        *Joy:* ${state.data.location}
-        
-        ${state?.data.recurring} ? "*Takrorlanadi:* Ha" : ""}
-        
-        ${state?.data.endDate} ? "*Tugash sanasi:*" ${state.data.endDate} : ""}
-        
-        ❌ Bekor qilish: /cancel  
-        ✅ Tasdiqlash: /confirm
-        `;
+    *Joy:* ${state.data.location}
+    
+    ❌ Bekor qilish: /cancel  
+    ✅ Tasdiqlash: /confirm
+    `;
 
     return bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
   }  
@@ -246,15 +248,11 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
     
     *Ishtirokchilar:* ${ev.guests.join(', ')}
     
-    *Uchrashuv sanasi:* ${ev.date}
-    
     *Boshlanish vaqti:* ${ev.time}
+
+    *Uchrashuv turi:* ${ev.type}
     
-    *Joy:* ${ev.location}
-    
-    ${ev?.recurring} ? "*Takrorlanadi:* Ha" : ""}
-    
-    ${ev?.endDate} ? "*Tugash sanasi:*" ${ev.endDate} : ""}`;
+    *Joy:* ${ev.location}`;
 
   await bot.sendMessage(receiver_chat, message, { parse_mode: 'Markdown' });
   }
@@ -389,4 +387,5 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
