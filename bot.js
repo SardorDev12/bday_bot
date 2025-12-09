@@ -78,7 +78,7 @@ bot.on('message', async (msg) => {
 
   const state = userState[chatId];
 
-  if(msg === "/stop"){
+  if(msg.text === "/stop"){
     delete userState[chatId];
     return bot.sendMessage(chatId, "❌ Bekor qilindi.");
   }
@@ -402,6 +402,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
