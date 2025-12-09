@@ -11,7 +11,7 @@ const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const MONGO_URL = process.env.MONGO_URL;
 const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
 const EVENT_MANAGER_ID = process.env.EVENT_MANAGER_ID;
-const ALLOWED_USERS = process.env.ALLOWED_USERS;
+const ALLOWED_USERS = JSON.parse(process.env.ALLOWED_USERS);
   
 // connect mongoose
 async function connectDB() {
@@ -76,6 +76,11 @@ bot.on('message', async (msg) => {
   if (!userState[chatId]) return;
 
   const state = userState[chatId];
+
+  if(msg === "/stop"){
+    delete userState[chatId];
+    return bot.sendMessage(chatId, "❌ Bekor qilindi.");
+  }
 
   // Step 1: Title
   if (state.step === 1) {
@@ -396,6 +401,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
