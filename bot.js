@@ -58,7 +58,7 @@ bot.onText(/^\/add_event$/, async (msg) => {
   const chatId = msg.chat.id;
   console.log(typeof ALLOWED_USERS )
 
-  if (ALLOWED_USERS.includes(Number(chatId))){
+  if (!ALLOWED_USERS.includes(Number(chatId))){
      bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
      return;
   }
@@ -352,7 +352,7 @@ bot.onText(/^\/t_bdays$/, async (msg) => {
 });
 
 bot.onText(/^\/events$/, async (msg) => {
-  if (ALLOWED_USERS.includes(Number(chatId))){
+  if (!ALLOWED_USERS.includes(Number(chatId))){
      bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
      return;
   }
@@ -365,7 +365,7 @@ bot.onText(/^\/t_events$/, async (msg) => {
 });
 
 bot.onText(/^\/h_events$/, async (msg) => {
-  if (ALLOWED_USERS.includes(Number(chatId))){
+  if (!ALLOWED_USERS.includes(Number(chatId))){
      bot.sendMessage(chatId,"Ruxsat etilmagan urinish!")
      return;
   }
@@ -402,6 +402,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
