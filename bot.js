@@ -412,9 +412,22 @@ http
       return;
     }
 
+    if (req.url === '/events/test') {
+      await checkEvents(TEST_GROUP_URL, ADMIN_ID);
+      res.end('Full-day events executed');
+      return;
+    }
+
+    if (req.url === '/events/half/test') {
+      await checkEvents(TEST_GROUP_URL, ADMIN_ID, true);
+      res.end('Half-day events executed');
+      return;
+    }
+
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
