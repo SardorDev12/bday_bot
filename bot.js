@@ -144,9 +144,18 @@ bot.on('message', async (msg) => {
 
   // Step 7: Type
   if (state.step === 7) {
-    state.data.type = text;
+
+    const allowedTypes = ["PM", "DATA", "TRANSFORMATION"];
+    
+    if(!allowedTypes.includes(text.trim().toUpperCase())){
+      return bot.sendMessage(
+        chatId,
+        "Xatolik! Quyidagilardan birini kiriting:\n\nPM, DATA, TRANSFORMATION"
+      )
+    }
+    state.data.type = text.trim().toUpperCase();
     state.step = 8;
-    return bot.sendMessage(chatId, 'Uchrashuv *manzilini* kiriting:', { parse_mode: 'Markdown' });
+    return bot.sendMessage(chatId, 'Uchrashuv *manzilini* va *formatini (ONLINE, OFFLINE)* kiriting:', { parse_mode: 'Markdown' });
   }
 
   // Step 8: Location + CONFIRM PREVIEW
@@ -169,7 +178,7 @@ bot.on('message', async (msg) => {
     
     *Joy:* ${state.data.location}
     
-    *Tugash sanasi:* ${state.data.endDate}
+    *Tugash sanasi:* ${state.data.endDate || ""}
     
     *Takroriymi?:* ${state.data.recurring ? "Ha" : "Yo‘q"}
     
@@ -427,6 +436,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
