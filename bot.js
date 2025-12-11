@@ -276,8 +276,8 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
 
   await bot.sendMessage(receiver_chat, message, { parse_mode: 'Markdown' });
 
-  if (ev.type?.toUpperCase() === "DATA" && DATA_GROUP_ID) {
-    await bot.sendMessage(DATA_GROUP_ID, message, { parse_mode: 'Markdown' });
+  if (ev.type?.toUpperCase() === "DATA" && TEST_DATA_GROUP) {
+    await bot.sendMessage(TEST_DATA_GROUP, message, { parse_mode: 'Markdown' });
   }  
     
   }
@@ -471,6 +471,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
