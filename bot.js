@@ -240,7 +240,6 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
   if (!halfDay) {
   events = allEvents;
   } else {
-  console.log("Server hour:", new Date().getHours());
     if (currentHours < 14) {
       events = allEvents.filter(ev => {
         if (!ev.time) return false;
@@ -436,30 +435,18 @@ const PORT = process.env.PORT || 3000;
 http
   .createServer(async (req, res) => {
     if (req.url === '/check') {
-      await runBirthdayCheck(GROUP_CHAT_ID);
+      await runBirthdayCheck(TEST_GROUP_URL);
       res.end('Cron executed\n');
       return;
     }
 
     if (req.url === '/events') {
-      await checkEvents(GROUP_CHAT_ID, ADMIN_ID);
-      res.end('Full-day events executed');
-      return;
-    }
-
-    if (req.url === '/events/half') {
-      await checkEvents(GROUP_CHAT_ID, ADMIN_ID, true);
-      res.end('Half-day events executed');
-      return;
-    }
-
-    if (req.url === '/events/test') {
       await checkEvents(TEST_GROUP_URL, ADMIN_ID);
       res.end('Full-day events executed');
       return;
     }
 
-    if (req.url === '/events/half/test') {
+    if (req.url === '/events/half') {
       await checkEvents(TEST_GROUP_URL, ADMIN_ID, true);
       res.end('Half-day events executed');
       return;
@@ -475,6 +462,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
