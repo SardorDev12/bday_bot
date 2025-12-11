@@ -206,8 +206,8 @@ bot.on('message', async (msg) => {
 });
 
 async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = false, targetDate = null, day = "Bugun") {
-  if(targetDate === dayjs().add(1, "day").format("DD.MM.YYYY")){
-    dat = "Ertaga"
+  if (targetDate === dayjs().add(1, "day").format("DD.MM.YYYY")) {
+      day = "Ertaga";
   }
   let now = new Date();
   let currentHours = now.getUTCHours() + 5;
@@ -475,6 +475,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
