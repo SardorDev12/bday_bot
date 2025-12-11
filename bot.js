@@ -205,7 +205,10 @@ bot.on('message', async (msg) => {
   }
 });
 
-async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = false, targetDate = null) {
+async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = false, targetDate = null, day = "Bugun") {
+  if(targetDate === dayjs().add(1, "day").format("DD.MM.YYYY")){
+    dat = "Ertaga"
+  }
   let now = new Date();
   let currentHours = now.getUTCHours() + 5;
   if (currentHours >= 24) currentHours -= 24;
@@ -262,7 +265,7 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
   // Send event messages
   for (const ev of events) {
   const message = `
-    📅 *Bugun uchrashuv bor!*
+    📅 *${day} uchrashuv bor!*
     
     *Mavzu:* ${ev.title}
     
@@ -472,6 +475,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
