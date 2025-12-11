@@ -9,6 +9,7 @@ const TOKEN = process.env.TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID;
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
 const DATA_GROUP_ID = process.env.DATA_GROUP_ID;
+const TEST_DATA_GROUP = process.env.TEST_DATA_GROUP;
 const MONGO_URL = process.env.MONGO_URL;
 const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
 const EVENT_MANAGER_ID = process.env.EVENT_MANAGER_ID;
@@ -235,6 +236,7 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
   if (!halfDay) {
   events = allEvents;
   } else {
+  console.log("Server hour:", new Date().getHours());
     if (currentHours < 14) {
       events = allEvents.filter(ev => {
         if (!ev.time) return false;
@@ -469,6 +471,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
