@@ -203,12 +203,12 @@ bot.on('message', async (msg) => {
   }
 });
 
-async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = false) {
+async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = false, targetDate = null) {
   let now = new Date();
   let currentHours = now.getHours();
   let events;
-  const today = dayjs().format("DD.MM.YYYY");
-  const todayNorm = normalize(today);
+  const dateStr = targetDate || 
+  const dateNorm = normalize(dateStr);
 
   function normalize(d) {
     const [dd, mm, yyyy] = d.split(".");
@@ -217,7 +217,7 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
   
   let allEvents = await Event.find({
     $or: [
-      { date: today },
+      { date: dateStr },
       { recurring: true }
     ]
   });
@@ -225,11 +225,10 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
   // Now filter recurring by normalized values
   allEvents = allEvents.filter(ev => {
     if (!ev.recurring) return true;
-  
     const evStart = normalize(ev.date);
     const evEnd = normalize(ev.endDate);
   
-    return evStart <= todayNorm && evEnd >= todayNorm;
+    return evStart <= dateNorm && evEnd >= dateNorm;
   });
   
   if (!halfDay) {
@@ -273,6 +272,11 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
     `;
 
   await bot.sendMessage(receiver_chat, message, { parse_mode: 'Markdown' });
+
+  if (ev.type?.toUpperCase() === "DATA" && DATA_GROUP_ID) {
+    await bot.sendMessage(DATA_GROUP_ID, message, { parse_mode: 'Markdown' });
+  }  
+    
   }
 
   await bot.sendMessage(current_chat, '📨 Uchrashuv xabarlari yuborildi.');
@@ -332,6 +336,8 @@ bot.setMyCommands([
   { command: "t_events", description: "Test bugungi uchrashuvlar" },
   { command: "h_events", description: "Yarim kunlik uchrashuvlar" },
   { command: "t_hevents", description: "Test - Yarim kunlik uchrashuvlar" },
+  { command: "nextday_events", description: "Ertangi kungi uchrashuvlar" },
+  { command: "t_nextday_events", description: "Test - Ertangi kungi uchrashuvlar" },
   { command: "add_event", description: "Uchrashuv qo'shish" },
 ]);
 
@@ -399,6 +405,25 @@ bot.onText(/^\/t_hevents$/, async (msg) => {
   await checkEvents(TEST_GROUP_URL,msg.from.id, true );
 });
 
+bot.onText(/^\/nextday_events$/, async (msg) => {
+  if (!ALLOWED_USERS.includes(Number(msg.chat.id))){
+     bot.sendMessage(msg.chat.id,"Ruxsat etilmagan urinish!")
+     return;
+  }
+  const tomorrow = dayjs().add(1, "day").format("DD.MM.YYYY");
+  await checkEvents(GROUP_CHAT_ID, msg.from.id, false, tomorrow);
+});
+
+bot.onText(/^\/t_nextday_events$/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID){
+     bot.sendMessage(msg.chat.id,"Ruxsat etilmagan urinish!")
+     return;
+  }
+  const tomorrow = dayjs().add(1, "day").format("DD.MM.YYYY");
+  await checkEvents(TEST_GROUP_URL, msg.from.id, false, tomorrow);
+});
+
+
 // url triggers for cron job servive
 const PORT = process.env.PORT || 3000;
 http
@@ -433,22 +458,16 @@ http
       return;
     }
 
+    if (req.url === '/events/nextday') {
+      const tomorrow = dayjs().add(1, "day").format("DD.MM.YYYY");
+      await checkEvents(TEST_GROUP_URL, ADMIN_ID, false, tomorrow)
+      res.end('Next-day events executed');
+      return;
+    }
+
     res.end('Bot is running\n');
   })
   .listen(PORT);
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
