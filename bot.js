@@ -207,7 +207,7 @@ async function checkEvents(receiver_chat, current_chat = ADMIN_ID, halfDay = fal
   let now = new Date();
   let currentHours = now.getHours();
   let events;
-  const dateStr = targetDate || 
+  const dateStr = targetDate || dayjs().format("DD.MM.YYYY");
   const dateNorm = normalize(dateStr);
 
   function normalize(d) {
@@ -468,6 +468,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
