@@ -8,6 +8,7 @@ dotenv.config();
 const TOKEN = process.env.TOKEN;
 const ADMIN_ID = process.env.ADMIN_ID;
 const GROUP_CHAT_ID = process.env.GROUP_CHAT_ID;
+const DATA_GROUP_ID = process.env.DATA_GROUP_ID;
 const MONGO_URL = process.env.MONGO_URL;
 const TEST_GROUP_URL = process.env.TEST_GROUP_URL;
 const EVENT_MANAGER_ID = process.env.EVENT_MANAGER_ID;
@@ -468,6 +469,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
