@@ -435,26 +435,26 @@ const PORT = process.env.PORT || 3000;
 http
   .createServer(async (req, res) => {
     if (req.url === '/check') {
-      await runBirthdayCheck(TEST_GROUP_URL);
+      await runBirthdayCheck(GROUP_CHAT_ID);
       res.end('Cron executed\n');
       return;
     }
 
     if (req.url === '/events') {
-      await checkEvents(TEST_GROUP_URL, ADMIN_ID);
+      await checkEvents(GROUP_CHAT_ID, ADMIN_ID);
       res.end('Full-day events executed');
       return;
     }
 
     if (req.url === '/events/half') {
-      await checkEvents(TEST_GROUP_URL, ADMIN_ID, true);
+      await checkEvents(GROUP_CHAT_ID, ADMIN_ID, true);
       res.end('Half-day events executed');
       return;
     }
 
     if (req.url === '/events/nextday') {
       const tomorrow = dayjs().add(1, "day").format("DD.MM.YYYY");
-      await checkEvents(TEST_GROUP_URL, ADMIN_ID, false, tomorrow)
+      await checkEvents(GROUP_CHAT_ID, ADMIN_ID, false, tomorrow)
       res.end('Next-day events executed');
       return;
     }
@@ -462,6 +462,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
