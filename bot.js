@@ -429,19 +429,33 @@ bot.onText(/^\/t_nextday_events$/, async (msg) => {
   await checkEvents(TEST_GROUP_URL, msg.from.id, false, tomorrow);
 });
 
-bot.onText(/^\/xabar$/, async (msg) => {
+bot.onText(/^\/xabar$/, (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) {
     return bot.sendMessage(msg.chat.id, "Ruxsat etilmagan urinish!");
   }
 
-  if (!msg.reply_to_message?.text) {
-    return bot.sendMessage(
-      msg.chat.id,
-      "Xabar yuborish uchun matnga reply qiling."
-    );
+  awaitingMessage.add(msg.from.id);
+
+  bot.sendMessage(
+    msg.chat.id,
+    "Xabar yuboring. Keyingi yuborgan xabaringiz guruhga jo‘natiladi."
+  );
+});
+
+bot.on("message", async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID) return;
+  if (!awaitingMessage.has(msg.from.id)) return;
+  if (msg.text?.startsWith("/")) return; // avoid commands
+
+  awaitingMessage.delete(msg.from.id);
+
+  if (!msg.text || msg.text.trim() === "") {
+    return bot.sendMessage(msg.chat.id, "Xabar bo‘sh bo‘lishi mumkin emas.");
   }
 
-  await bot.sendMessage(TEST_GROUP_URL, msg.reply_to_message.text);
+  await bot.sendMessage(TEST_GROUP_URL, msg.text);
+
+  bot.sendMessage(msg.chat.id, "Xabar muvaffaqiyatli yuborildi.");
 });
 
 
@@ -477,6 +491,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
