@@ -429,6 +429,21 @@ bot.onText(/^\/t_nextday_events$/, async (msg) => {
   await checkEvents(TEST_GROUP_URL, msg.from.id, false, tomorrow);
 });
 
+bot.onText(/^\/xabar$/, async (msg) => {
+  if (String(msg.from.id) !== ADMIN_ID) {
+    return bot.sendMessage(msg.chat.id, "Ruxsat etilmagan urinish!");
+  }
+
+  if (!msg.reply_to_message?.text) {
+    return bot.sendMessage(
+      msg.chat.id,
+      "Xabar yuborish uchun matnga reply qiling."
+    );
+  }
+
+  await bot.sendMessage(TEST_GROUP_URL, msg.reply_to_message.text);
+});
+
 
 // url triggers for cron job servive
 const PORT = process.env.PORT || 3000;
@@ -462,6 +477,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
