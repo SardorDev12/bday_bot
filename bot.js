@@ -429,6 +429,7 @@ bot.onText(/^\/t_nextday_events$/, async (msg) => {
   await checkEvents(TEST_GROUP_URL, msg.from.id, false, tomorrow);
 });
 
+const awaitingMessage = new Set();
 bot.onText(/^\/xabar$/, (msg) => {
   if (String(msg.from.id) !== ADMIN_ID) {
     return bot.sendMessage(msg.chat.id, "Ruxsat etilmagan urinish!");
@@ -491,6 +492,7 @@ http
     res.end('Bot is running\n');
   })
   .listen(PORT);
+
 
 
 
